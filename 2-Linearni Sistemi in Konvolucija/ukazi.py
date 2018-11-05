@@ -1,3 +1,7 @@
+# Author: Martin Konečnik
+# Contact: martin.konecnik@gmail.com
+# Licenced under MIT
+
 # 2-Linearni Sistemi in Konvolucija
 import numpy as np
 import scipy.signal
@@ -9,9 +13,9 @@ import plotly.graph_objs as go
 from PIL import Image
 
 '--------------------------------------------------------------------\n% LINEARNI SISTEMI IN KONVOLUCIJA\n% (C) ROSIS 2012, LSPO, FERI, Univerza v Mariboru, Slovenia \n% \n% Poglavje 1: 1D signali\n'
-# Konvoluvcija: preprosti primeri z for zanko
+# Konvolucija: preprosti primeri z for zanko
 
-# originalna formula za konvolucijo (samo vzroni del):
+# originalna formula za konvolucijo (samo vzročni del):
 
 #             inf
 #            ---
@@ -20,7 +24,7 @@ from PIL import Image
 #            ---
 #             k=0
 
-# v naem primeru je prvi element x oz. h na indeksu 1 (in ne na 0, kot je to v zgornji formuli), torej
+# v našem primeru je prvi element x oz. h na indeksu 1 (in ne na 0, kot je to v zgornji formuli), torej
 
 #             inf
 #            ---
@@ -29,11 +33,11 @@ from PIL import Image
 #            ---
 #             k=0
 
-# OPOMBA: pri n-k se vpliv postavitve zaetnega indeksa izniči: n+1 - (k+1) = n-k
+# OPOMBA: pri n-k se vpliv postavitve začetnega indeksa izniči: n+1 - (k+1) = n-k
 
-# n je smiselno omejiti z zgornjo mejo len(x)+len(h)-1, saj so naprej same nile...
+# n je smiselno omejiti z zgornjo mejo len(x)+len(h)-1, saj so naprej same ničle...
 # zaradi h(n-k) mora biti n-k med 1 in len(h), torej mora biti k med n-len(h) in n-1, ampak samo za pozitivne n-k!
-# zaradi x(k+1) mora teci k med 0 in len(x)-1
+# zaradi x(k+1) mora teči k med 0 in len(x)-1
 
 # ukazi.m:33
 print("\n" * 80)  # clc
@@ -42,16 +46,14 @@ h = (1, 2, 1)
 
 # ukazi.m:37
 y = np.zeros(len(x) + len(h) - 1).tolist()  # dolžina izhoda, pretvorimo v python list za izris
-for n in range(0, len(x) + len(h) - 1):  # V Pythonu je prvi element vektorja/seznama na indexu 0.
+for n in range(0, len(x) + len(h) - 1):  # V Pythonu je prvi element na indexu 0.
     print('...............')
     print('  n = {0}'.format(n))
     for k in range(max(n - len(h) + 1, 0), min(n + 1, len(x))):
         print('     n-k = {0}'.format(n - k))
         y[n] = y[n] + x[k] * h[n - k]
 
-# ukazi.m:48
 y2 = np.convolve(x, h).tolist()
-# ukazi.m:50
 plt.figure()
 blue, = plt.plot(y, 'b-', linewidth=2, label='for zanka')
 red, = plt.plot(y2, 'r:', linewidth=2, label='convolve')
@@ -379,6 +381,7 @@ plt.tight_layout()
 # impulzni odzivi posameznih prostorov: http://www.voxengo.com/impulses/
 # ukazi.m:321
 # h,Fs,bits=wavread('IMreverbs/Going Home.wav')
+# Če datoteke ne najde, verjetno išče v mapi prej odprte. Najlažje se reši, če zapreš IDE in ponovno odpreš to datoteko.
 Fs, h = wavfile.read('../IMreverbs/Going Home.wav')
 h = h / np.linalg.norm(h)
 sd.play(50 * h, Fs)
@@ -399,7 +402,7 @@ plt.tight_layout()
 # ukazi.m:337
 efekt = np.ndarray(shape=(len(posnetek) + len(h) - 1, 2))
 tic = time.time()
-# Proces traja ~30 sekund
+# Proces traja kakšne pol minute, tako da ne skrbet, da traja predolgo.
 efekt[:, 0] = np.convolve(posnetek[:, 0], h[:, 0])
 efekt[:, 1] = np.convolve(posnetek[:, 1], h[:, 1])
 toc = time.time() - tic
@@ -449,30 +452,24 @@ ax[1].set_ylabel('amplituda')
 plt.tight_layout()
 
 sd.play(efekt, Fs)
-################################################################################################################################################ here
+
 '--------------------------------------------------------------------' \
 '% kako pa je s konvolucijo v časovnem prostoru, če so signali dolgi'
+# ukazi.m:388
+Fs, h = wavfile.read('../IMreverbs/Five columns.wav')
+h = h / np.linalg.norm(h)
 
-h, Fs, bits = wavread('IMreverbs/Five columns.wav')
-# ukazi.m:348
-h = h / linalg.norm(h)
-# ukazi.m:349
 ###### posnamemo govor ###########################################
-# my_recorder=audiorecorder(Fs,bits,2)
-# ukazi.m:352
-# recordblocking(my_recorder,30)
-# posnetek=getaudiodata(my_recorder)
-posnetek = sd.rec(30 * Fs, Fs, 2)
-# ukazi.m:354
+# 30 sekund
+posnetek = sd.rec(30 * Fs, Fs, 2, blocking=True)
 sd.play(posnetek, Fs)
 ############### konvolucija v asovni domeni #######################
 tic = time.time()
 efekt[:, 0] = np.convolve(posnetek[:, 0], h[:, 0])
-# ukazi.m:359
 efekt[:, 1] = np.convolve(posnetek[:, 1], h[:, 1])
-# ukazi.m:360
-toc = time.time() - tic;
-toc
+toc = time.time() - tic
+print('Pretekel čas: {0} sekund'.format(toc))
+
 sd.play(efekt, Fs)
 ############### konvolucija v frekvenni domeni #######################
 tic = time.time()
@@ -480,20 +477,22 @@ X = np.fft.fft(([posnetek[:, 1]], [np.zeros(len(h[:, 1]) - 1, 1)]))
 # ukazi.m:367
 Y = np.fft.fft(([h[:, 1]], [np.zeros(len(posnetek[:, 1]) - 1, 1)]))
 # ukazi.m:368
-efekt[:, 1] = np.fft.ifft(multiply(X, Y))
+efekt[:, 1] = np.fft.ifft(np.multiply(X, Y))
 # ukazi.m:369
-toc = time.time() - tic;
-toc
+toc = time.time() - tic
+print('Pretekel čas: {0} sekund'.format(toc))
 tic = time.time()
 X = np.fft.fft(([posnetek[:, 2]], [np.zeros(len(h[:, 2]) - 1, 1)]))
 # ukazi.m:373
 Y = np.fft.fft(([h[:, 2]], [np.zeros(len(posnetek[:, 2]) - 1, 1)]))
 # ukazi.m:374
-efekt[:, 2] = np.fft.ifft(multiply(X, Y))
+efekt[:, 2] = np.fft.ifft(np.multiply(X, Y))
 # ukazi.m:375
-toc = time.time() - tic;
-toc
+toc = time.time() - tic
+print('Pretekel čas: {0} sekund'.format(toc))
 sd.play(efekt, Fs)
+
+# Prevedeno do tukaj.
 '--------------------------------------------------------------------\n% Konvoluvcija in 3D zvok\n% impulzni odzivi posameznih pozicij v prostoru: http://recherche.ircam.fr/equipes/salles/listen/download.html \n%%%%%% posnamemo govor %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n'
 
 plt.close('all')
@@ -552,7 +551,7 @@ plt.axis('tight')
 plt.title('desni kanal')
 plt.xlabel('as (ms)')
 plt.ylabel('amplituda')
-############### konvolucija v frekvenni domeni #######################
+############### konvolucija v frekvenčni domeni #######################
 clear('posnetek3D')
 # convolveert stereo to mono sd.play
 posnetekMONO = (posnetek[:, 1] + posnetek[:, 2]) / 2

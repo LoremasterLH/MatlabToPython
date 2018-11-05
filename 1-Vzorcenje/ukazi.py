@@ -1,3 +1,7 @@
+# Author: Martin Konečnik
+# Contact: martin.konecnik@gmail.com
+# Licenced under MIT
+
 # 1-Vzorčenje
 # Predlagan IDE PyCharm Community Edition (na voljo za Windows, macOS in Linux)
 # https://www.jetbrains.com/pycharm/download
@@ -7,18 +11,14 @@ import numpy as np
 import scipy.signal
 from matplotlib import cm  # color mapping
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
 import sounddevice as sd
-import plotly.plotly as py
-import plotly.graph_objs as go
 import os
-from PIL import Image
 
 # ----------------------------------------------------------------------------------------
 # Vzorčenje in Nyquistov teorem;
 Fvz = 100  # Frekvenca vzorčenja (v Hz)
 T = 1  # dolžina signala (v s)
-i = np.arange(float(T)*Fvz)/Fvz  # vektor časovnih indeksov
+i = np.arange(float(T) * Fvz) / Fvz  # vektor časovnih indeksov
 f1 = 5  # frekvenca sinusoide
 A1 = 1  # amplituda sinusoide
 faza1 = 0.0  # faza sinusoide
@@ -42,12 +42,12 @@ for faza1 in np.arange(0, 6.1, 0.1).reshape(-1):
 # izris sinusid pri razlicnih frekvencah...............................................
 faza1 = 0.0
 plt.figure()
-for f1 in np.arange(Fvz+1).reshape(-1):
+for f1 in np.arange(Fvz + 1).reshape(-1):
     plt.cla()
     s = np.dot(A1, np.sin(np.dot(2 * np.pi * f1, i) + faza1 * np.pi))
     plt.plot(i, s)
     plt.autoscale(False)
-    plt.ylim(-1,1)
+    plt.ylim(-1, 1)
     plt.title('Fvz = {0} Hz, Frekvenca = {1} Hz, faza = {2} $\pi$'.format(Fvz, f1, faza1))
     plt.xlabel('Čas (s)')
     plt.ylabel('Amplituda (dB)')
@@ -57,7 +57,7 @@ for f1 in np.arange(Fvz+1).reshape(-1):
 # ########################### izris sinusoid s frekvenco f1 in Fvz-f1.........................
 plt.figure()
 f1 = 1
-s1 = np.sin(np.dot(2*np.pi*f1, i) + faza1*np.pi)
+s1 = np.sin(np.dot(2 * np.pi * f1, i) + faza1 * np.pi)
 plt.plot(i, s1, 'b')
 f2 = Fvz - f1
 s2 = np.sin(np.dot(np.dot(np.dot(2, np.pi), f2), i) + np.dot(faza1, np.pi))
@@ -77,7 +77,7 @@ plt.axis('tight')
 Fs = 44100  # vzorčevalna frekvenca
 bits = 16  # bitna ločljivost
 nchans = 1  # 1 (mono), 2 (stereo).
-posnetek = sd.rec(5*Fs, Fs, nchans, blocking=True)
+posnetek = sd.rec(5 * Fs, Fs, nchans, blocking=True)
 plt.figure()
 plt.plot(posnetek)
 
@@ -90,12 +90,12 @@ sd.play(posnetek, 2 * 44100)
 # ali zaznate fazne spremembe? Spreminjajte faza1 med 0 in 2.0 in poženite ta demo...
 Fvz = 44100  # vzorčevalna frekvenca
 T = 3  # čas v sekundah
-i = np.arange(0.0, T*Fvz+1, 1)/Fvz  # vektor časovnih indeksov
+i = np.arange(0.0, T * Fvz + 1, 1) / Fvz  # vektor časovnih indeksov
 f1 = 500  # frekvenca sinusoide
 A1 = 0.3  # amplituda sinusoide
 faza1 = 1.0  # faza sinusoide
-s = np.dot(A1, np.sin(np.dot(2*np.pi*f1, i) + faza1*np.pi))
-s2 = np.dot(A1, np.sin(np.dot(2*np.pi*f2, i) + 0*np.pi))
+s = np.dot(A1, np.sin(np.dot(2 * np.pi * f1, i) + faza1 * np.pi))
+s2 = np.dot(A1, np.sin(np.dot(2 * np.pi * f2, i) + 0 * np.pi))
 sd.play(np.concatenate((s, s2)), Fvz)  # dvojni oklepaji pri concatenate, ker sta oba prvi parameter
 # "navadna" polja združiš z s+s2, v numpy.array pa to sešteje istoležne elemente
 
@@ -109,14 +109,14 @@ sd.play(np.concatenate((s, s2)), Fvz)  # dvojni oklepaji pri concatenate, ker st
 
 Fvz = 44100  # vzorčevalna frekvenca
 T = 3  # čas v sekundah
-i = np.arange(T*Fvz+1)/Fvz  # vektor časovnih indeksov
+i = np.arange(T * Fvz + 1) / Fvz  # vektor časovnih indeksov
 f1 = 50  # frekvenca sinusoide
 A1 = 5.5  # amplituda sinusoide
 faza1 = 0.0  # faza sinusoide
 f2 = f1 + 1  # frekvenca druge sinusoide
 
-s1 = np.dot(A1, np.sin(np.dot(2*np.pi*f1, i) + faza1*np.pi))  # tvorjenje prve sinusoide
-s2 = np.dot(A1, np.sin(np.dot(2*np.pi*f2, i) + faza1*np.pi))  # tvorjenje druge sinusoide
+s1 = np.dot(A1, np.sin(np.dot(2 * np.pi * f1, i) + faza1 * np.pi))  # tvorjenje prve sinusoide
+s2 = np.dot(A1, np.sin(np.dot(2 * np.pi * f2, i) + faza1 * np.pi))  # tvorjenje druge sinusoide
 sd.play(np.concatenate((s, s2)), Fvz)
 
 # -----------------------------------------------------------------------------------------
@@ -124,19 +124,19 @@ sd.play(np.concatenate((s, s2)), Fvz)
 # ali zaznate zvok netopirja pri 90000 Hz? Nyquist?
 Fvz = 44100
 T = 3
-i = np.arange(T*Fvz+1)/Fvz  # vektor časovnih indeksov
+i = np.arange(T * Fvz + 1) / Fvz  # vektor časovnih indeksov
 fnetopir = 140000  # frekvenca sinusoide
 A1 = 5.5  # amplituda sinusoide
 faza1 = 1.0  # faza sinusoide
 
-s = np.dot(A1, np.sin(np.dot(2*np.pi*fnetopir, i) + faza1*np.pi))  # tvorjenje sinusoide
+s = np.dot(A1, np.sin(np.dot(2 * np.pi * fnetopir, i) + faza1 * np.pi))  # tvorjenje sinusoide
 sd.play(s, Fvz)
 
 # ukazi.m:118
 # izris sinuside pri razlicnih fazah (verzija 2)......................................................
 Fvz = 100
 T = 1
-i = np.arange(T*Fvz+1)/Fvz
+i = np.arange(T * Fvz + 1) / Fvz
 f1 = 5
 A1 = 5
 faza1 = 0.0
@@ -145,7 +145,7 @@ faza1 = 0.0
 plt.close('all')
 # horribly slow
 plt.figure()
-for f1 in np.arange(0, Fvz+1).reshape(-1):
+for f1 in np.arange(0, Fvz + 1).reshape(-1):
     plt.clf()
     s = np.sin(np.dot(2 * np.pi * f1, i) + faza1 * np.pi)
     plt.subplot(2, 1, 1)
@@ -161,7 +161,6 @@ for f1 in np.arange(0, Fvz+1).reshape(-1):
     plt.title('Frekvenčna domena (abs): Fvz = {0} Hz, Frekvenca = {1} Hz, faza = {2} $\pi$'.format(Fvz, f1, faza1))
     plt.waitforbuttonpress()
 
-
 # in faze... (več o tem na naslednjih vajah)
 f1 = 5
 A1 = 5
@@ -170,7 +169,7 @@ plt.close('all')
 plt.figure()
 for faza1 in np.arange(0, 2, 0.1).reshape(-1):
     plt.clf()
-    s = np.sin(np.dot(2*np.pi*f1, i) + faza1*np.pi)
+    s = np.sin(np.dot(2 * np.pi * f1, i) + faza1 * np.pi)
     plt.subplot(2, 1, 1)
     plt.plot(s)
     plt.axis('tight')
@@ -335,44 +334,37 @@ plt.title('podvzorčena slika: faktor podvzorčenja {0}'.format(pvz))
 
 # ukazi.m:253
 # operator povprečenja (verzija 1)
-D = 3  # premer lokalne okolice piksla, na kateri se izračuna povprečna verdnost
-B = np.ndarray((A.shape[0] - D+1, A.shape[1] - D+1, D))  # np.matrix?
+# Mislim, da ne dela kot bi moralo. Could probably benefit from refactoring.
+D = 3  # premer lokalne okolice piksla, na kateri se izračuna povprečna vrednost
+B = np.ndarray((A.shape[0] - D + 1, A.shape[1] - D + 1, D))
 for r in np.arange(0, A.shape[0] - D).reshape(-1):
     for c in np.arange(0, A.shape[1] - D).reshape(-1):
-        C = A[r + np.arange(0, D-1), c + np.arange(0, D-1), 0]
+        C = A[r + np.arange(0, D - 1), c + np.arange(0, D - 1), 0]
         B[r, c, 0] = np.mean(np.ravel(C))
-        C = A[r + np.arange(0, D-1), c + np.arange(0, D-1), 1]
+        C = A[r + np.arange(0, D - 1), c + np.arange(0, D - 1), 1]
         B[r, c, 1] = np.mean(np.ravel(C))
-        C = A[r + np.arange(0, D-1), c + np.arange(0, D-1), 2]
+        C = A[r + np.arange(0, D - 1), c + np.arange(0, D - 1), 2]
         B[r, c, 2] = np.mean(np.ravel(C))
 
 plt.figure()
 plt.imshow(np.uint8(B))
 plt.title('zglajena slika')
-# operator povpreenja (verzija 2)
-# isti operator povpreenja kot zgoraj, implementiran nekoliko drugae (veliko hitreja izvedba)
-D = 3
+
 # ukazi.m:270
-
-B = np.ndarray((A.shape[0]+D-1, A.shape[1]+D-1, D))
-# ukazi.m:271
-
+# operator povpreenja (verzija 2)
+# isti operator povprečenja kot zgoraj, implementiran nekoliko drugače (veliko hitreja izvedba)
+D = 3
+B = np.ndarray((A.shape[0] + D - 1, A.shape[1] + D - 1, D))
 B[:, :, 0] = scipy.signal.convolve2d(np.double(A[:, :, 0]), np.ones((D, D), np.float) / D ** 2)
-# ukazi.m:272
 B[:, :, 1] = scipy.signal.convolve2d(np.double(A[:, :, 1]), np.ones((D, D), np.float) / D ** 2)
-# ukazi.m:273
 B[:, :, 2] = scipy.signal.convolve2d(np.double(A[:, :, 2]), np.ones((D, D), np.float) / D ** 2)
-# ukazi.m:274
 B = np.uint8(B)
-# ukazi.m:275
-
 plt.figure()
 plt.imshow(B)
 plt.title('zglajena slika')
-# prikaz
-pvz = 3
-# ukazi.m:281
 
+# prikaz
+pvz = 3  # faktor podvzorčenja
 plt.figure()
 plt.subplot(1, 2, 1)
 plt.imshow(A[0::pvz, 0::pvz, :])

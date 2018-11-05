@@ -1,4 +1,25 @@
-Easy setup:
+Prevod prve polovice vaj pri predmetu ROSIS iz Matlab v Python 3.
+
+Podpora za Python 2 se je nehala z 1.1.2018, tako da menim, da je bolje uporabiti Python 3.
+
+Uporabljen IDE: PyCharm
+Verzija Python:	3.6.1
+Knjižnice:		matplotlib
+				numpy
+				os
+				scipy
+				sounddevice
+				time
+
+1-Vzorèenje							Prevedeno
+2-Liearni Sistemi in Konvolucija	Prevedeno do (oznaèeno)
+3-Fourirjeva Analiza				Delno prevedeno
+4-Lastnosti Fourirjeve Analize		Work in progress
+5-Filtri							Work in progress
+
+----------------------------------------------------------------------------------------------------
+
+Easy setup (Not thoroughly tested as I don't use Anaconda. Should be an easier setup than starting from scratch, though. Might be inconsistent; feel free to change/add):
 Install Anaconda
 	If you want to use VS Code, install it once prompted (recommended if you're unfamiliar with Python, but hey, you can use Notepad, if you want)
 Install Finished
@@ -10,7 +31,7 @@ To install packages that were not found:
 Open "Anaconda Prompt"
 	pip install <package>
 
-In case you're wondering why sometimes pip and sometimes conda for installing: pip is Python's package manager
+In case you're wondering why sometimes pip and sometimes conda for installing: pip is Python's package manager while conda is package manager of Anaconda distribution.
 Known issues:
 Installing: If you get red text saying "distributed 1.21.8 requires msgpack, which is not installed."; don't worry. You don't need it. As long as you get "Successfully installed <package> you're good". You can however install it with "conda install -c anaconda msgpack-python".
 
