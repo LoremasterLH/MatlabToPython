@@ -427,6 +427,7 @@ plt.tight_layout()
 tic = time.time()
 X = np.fft.fft(np.concatenate((posnetek[:, 0], np.zeros(len(h[:, 0]) - 1))))
 Y = np.fft.fft(np.concatenate((h[:, 0], np.zeros(len(posnetek[:, 0]) - 1))))
+posnetek = np.empty([X.size, 2])  # Initialise new np array as python does not do this automatically to fit data.
 efekt[:, 0] = np.fft.ifft(np.multiply(X, Y))
 toc = time.time() - tic
 print('Pretekel čas: {0} sekund'.format(toc))
@@ -459,6 +460,7 @@ sd.play(efekt, Fs)
 Fs, h = wavfile.read('../IMreverbs/Five columns.wav')
 h = h / np.linalg.norm(h)
 
+# Recording not working at this point (for me).
 ###### posnamemo govor ###########################################
 # 30 sekund
 posnetek = sd.rec(30 * Fs, Fs, 2, blocking=True)
@@ -471,28 +473,25 @@ toc = time.time() - tic
 print('Pretekel čas: {0} sekund'.format(toc))
 
 sd.play(efekt, Fs)
+
+# ukazi.m:405
 ############### konvolucija v frekvenni domeni #######################
 tic = time.time()
-X = np.fft.fft(([posnetek[:, 1]], [np.zeros(len(h[:, 1]) - 1, 1)]))
-# ukazi.m:367
-Y = np.fft.fft(([h[:, 1]], [np.zeros(len(posnetek[:, 1]) - 1, 1)]))
-# ukazi.m:368
-efekt[:, 1] = np.fft.ifft(np.multiply(X, Y))
-# ukazi.m:369
+X = np.fft.fft(np.concatenate((posnetek[:, 0], np.zeros(len(h[:, 0]) - 1))))
+Y = np.fft.fft(np.concatenate((h[:, 0], np.zeros(len(posnetek[:, 0]) - 1))))
+posnetek = np.empty([X.size, 2])  # Initialise new np array as python does not do this automatically to fit data.
+posnetek[:, 0] = np.fft.ifft(np.multiply(X, Y))
 toc = time.time() - tic
 print('Pretekel čas: {0} sekund'.format(toc))
 tic = time.time()
-X = np.fft.fft(([posnetek[:, 2]], [np.zeros(len(h[:, 2]) - 1, 1)]))
-# ukazi.m:373
-Y = np.fft.fft(([h[:, 2]], [np.zeros(len(posnetek[:, 2]) - 1, 1)]))
-# ukazi.m:374
-efekt[:, 2] = np.fft.ifft(np.multiply(X, Y))
-# ukazi.m:375
+X = np.fft.fft(np.concatenate((posnetek[:, 1], np.zeros(len(h[:, 1]) - 1))))
+Y = np.fft.fft(np.concatenate((h[:, 1], np.zeros(len(posnetek[:, 1]) - 1))))
+posnetek = np.empty([X.size, 2])  # Initialise new np array as python does not do this automatically to fit data.
+posnetek[:, 1] = np.fft.ifft(np.multiply(X, Y))
 toc = time.time() - tic
 print('Pretekel čas: {0} sekund'.format(toc))
-sd.play(efekt, Fs)
+sd.play(posnetek, Fs)
 
-# Prevedeno do tukaj.
 '--------------------------------------------------------------------\n% Konvoluvcija in 3D zvok\n% impulzni odzivi posameznih pozicij v prostoru: http://recherche.ircam.fr/equipes/salles/listen/download.html \n%%%%%% posnamemo govor %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n'
 
 plt.close('all')
@@ -520,6 +519,17 @@ plt.axis('tight')
 plt.title('kanal 2')
 plt.xlabel('as (s)')
 plt.ylabel('amplituda')
+
+f, ax = plt.subplots(2)
+ax[0].plot(np.arange(0, len(posnetek)) / Fs, posnetek[:, 0])
+ax[0].set_title('kanal 1')
+ax[0].set_xlabel('čas (s)')
+ax[0].set_ylabel('amplituda')
+ax[1].plot(np.arange(0, len(posnetek)) / Fs, posnetek[:, 1])
+ax[1].set_title('kanal 2')
+ax[1].set_xlabel('čas (s)')
+ax[1].set_ylabel('amplituda')
+plt.tight_layout()
 ############# naloimo impulzni odziv 3D zvoka (dostopen na spletu) ########################
 # impulzni odzivi posameznih prostorov: http://recherche.ircam.fr/equipes/salles/listen/download.html
 
