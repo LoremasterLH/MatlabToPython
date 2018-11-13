@@ -486,7 +486,7 @@ print('Pretekel čas: {0} sekund'.format(toc))
 tic = time.time()
 X = np.fft.fft(np.concatenate((posnetek[:, 1], np.zeros(len(h[:, 1]) - 1))))
 Y = np.fft.fft(np.concatenate((h[:, 1], np.zeros(len(posnetek[:, 1]) - 1))))
-posnetek = np.empty([X.size, 2])  # Initialise new np array as python does not do this automatically to fit data.
+# posnetek = np.empty([X.size, 2])  # Initialise new np array as python does not do this automatically to fit data.
 posnetek[:, 1] = np.fft.ifft(np.multiply(X, Y))
 toc = time.time() - tic
 print('Pretekel čas: {0} sekund'.format(toc))
@@ -533,19 +533,13 @@ plt.tight_layout()
 ############# naloimo impulzni odziv 3D zvoka (dostopen na spletu) ########################
 # impulzni odzivi posameznih prostorov: http://recherche.ircam.fr/equipes/salles/listen/download.html
 
+# Not sure what to do here.
 load('.\\3Dsd.play\\IRC_1059_C_HRIR.mat')
 elevation = 50
-# ukazi.m:405
-
 azimuth = 270
-# ukazi.m:406
-
 pos_err, pos_ind = min(abs(l_eq_hrir_S.elev_v - elevation) + abs(l_eq_hrir_S.azim_v - azimuth), nargout=2)
-# ukazi.m:407
 left_channel_IR = l_eq_hrir_S.content_m(pos_ind, np.arange())
-# ukazi.m:409
 right_channel_IR = r_eq_hrir_S.content_m(pos_ind, np.arange())
-# ukazi.m:410
 # sd.play(40*left_channel_IR,Fs);
 
 plt.figure()
@@ -563,23 +557,17 @@ plt.xlabel('as (ms)')
 plt.ylabel('amplituda')
 ############### konvolucija v frekvenčni domeni #######################
 clear('posnetek3D')
+
 # convolveert stereo to mono sd.play
-posnetekMONO = (posnetek[:, 1] + posnetek[:, 2]) / 2
-# ukazi.m:428
 # left channel
-X = np.fft.fft(([posnetekMONO], [np.zeros(len(left_channel_IR) - 1, 1)]))
-# ukazi.m:431
-Y = np.fft.fft(([left_channel_IR.T], [np.zeros(len(posnetekMONO) - 1, 1)]))
-# ukazi.m:432
-posnetek3D[:, 1] = np.fft.ifft(multiply(X, Y))
-# ukazi.m:433
+X = np.fft.fft((posnetekMONO, np.concatenate(np.zeros(len(left_channel_IR) - 1, 1))))
+Y = np.fft.fft((left_channel_IR.T, np.concatenate(np.zeros(len(posnetekMONO) - 1, 1))))
+posnetek3D[:, 1] = np.fft.ifft(np.multiply(X, Y))
+
 # left channel
-X = np.fft.fft(([posnetekMONO], [np.zeros(len(right_channel_IR) - 1, 1)]))
-# ukazi.m:436
-Y = np.fft.fft(([right_channel_IR.T], [np.zeros(len(posnetekMONO) - 1, 1)]))
-# ukazi.m:437
+X = np.fft.fft((posnetekMONO, np.concatenate(np.zeros(len(right_channel_IR) - 1, 1))))
+Y = np.fft.fft((right_channel_IR.T, np.concatenate(np.zeros(len(posnetekMONO) - 1, 1))))
 posnetek3D[:, 2] = np.fft.ifft(multiply(X, Y))
-# ukazi.m:438
 plt.figure()
 plt.subplot(2, 1, 1)
 plt.plot((np.arange(1, len(posnetek3D))) / Fs, posnetek3D[:, 1], 'r')
