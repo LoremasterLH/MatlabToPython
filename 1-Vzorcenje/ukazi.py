@@ -9,13 +9,17 @@
 # https://www.jetbrains.com/help/pycharm/installing-uninstalling-and-upgrading-packages.html
 # Kratka navodila. Znotraj GUI knjižnice dodamo prek File->Settings->Project: Name->Project Interpreter.
 # V tem oknu na desni strani kliknemo na plus in vpišemo ime knjižnice.
+# Privzeta bližnjica za zagon izbora je Alt+Shift+E
 
 import numpy as np
 import scipy.signal
 from matplotlib import cm  # color mapping
+import pylab as pylab
 import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 import sounddevice as sd
-import os
+from pathlib import Path
+from PIL import Image
 
 # ----------------------------------------------------------------------------------------
 # Vzorčenje in Nyquistov teorem;
@@ -46,7 +50,7 @@ for faza1 in np.arange(0, 6.1, 0.1):
 faza1 = 0.0
 plt.figure()
 for f1 in np.arange(Fvz + 1):
-    plt.cla()  # clear axes
+    plt.cla()  # počistimo graf za naslednjo iteracijo
     s = np.dot(A1, np.sin(np.dot(2 * np.pi * f1, i) + faza1 * np.pi))
     plt.plot(i, s)
     plt.ylim(-1, 1)
@@ -137,31 +141,34 @@ faza1 = 1.0  # faza sinusoide
 s = np.dot(A1, np.sin(np.dot(2 * np.pi * fnetopir, i) + faza1 * np.pi))  # tvorjenje sinusoide
 sd.play(s, Fvz)
 
-# ukazi.m:118 -- NOTE: Work in progress; numpy fft behaves differently from matlab?
+# ukazi.m:118 -- NOTE: Preverjeno z Matlab
 # izris sinuside pri razlicnih fazah (verzija 2)
 Fvz = 100
 T = 1
-i = np.arange(T * Fvz + 1) / Fvz
+i = np.arange(T * Fvz) / Fvz
 f1 = 5
 A1 = 5
 faza1 = 0.0
 
 # spremninjanje frekvence...
 plt.close('all')
-fig, ax = plt.subplots(2)
+fig, ax = plt.subplots(2)  # create a figure with 2 subplots
+fig.tight_layout(rect=[0, 0.03, 1, 0.95])
+
 for f1 in np.arange(0, Fvz+1):
+    ax[0].clear()
+    ax[1].clear()
+
     s = np.sin(np.dot(2 * np.pi * f1, i) + faza1 * np.pi)
     ax[0].plot(s)
-    ax[0].set_title('Časovna domena: Fvz = {0} Hz, Frekvenca = {1} Hz, faza = {2} $\pi$'.format(Fvz, f1, faza1))
     ax[0].set_ylim(-1, 1)
+    ax[0].set_title('Časovna domena: Fvz = {0} Hz, Frekvenca = {1} Hz, faza = {2} $\pi$'.format(Fvz, f1, faza1))
 
     ax[1].plot(abs(np.fft.fft(s)), 'r')
-    ax[1].set_title('Frekvenčna domena (abs): Fvz = {0} Hz, Frekvenca = {1} Hz, faza = {2} $\pi$'.format(Fvz, f1, faza1))
     ax[1].set_ylim(-1, 1)
+    ax[1].set_title('Frekvenčna domena (abs): Fvz = {0} Hz, Frekvenca = {1} Hz, faza = {2} $\pi$'.format(Fvz, f1, faza1))
 
     plt.waitforbuttonpress()
-    ax[0].clear()  # clear axes for next
-    ax[1].clear()
 
 
 # in faze... (več o tem na naslednjih vajah)
@@ -169,29 +176,31 @@ f1 = 5
 A1 = 5
 faza1 = 0.0
 plt.close('all')
-plt.figure()
-for faza1 in np.arange(0, 2, 0.1).reshape(-1):
-    plt.clf()
+fig, ax = plt.subplots(2)
+fig.tight_layout(rect=[0, 0.03, 1, 0.95])
+
+for faza1 in np.arange(0, 2.1, 0.1):
+    ax[0].clear()
+    ax[1].clear()
+
     s = np.sin(np.dot(2 * np.pi * f1, i) + faza1 * np.pi)
-    plt.subplot(2, 1, 1)
-    plt.plot(s)
-    plt.axis('tight')
-    setattr(plt.gca, 'YLim', [- 1, 1])
-    plt.title('Časovna domena: Fvz = {0} Hz, Frekvenca = {1} Hz, faza = {2} $\pi$'.format(Fvz, f1, faza1))
-    plt.subplot(2, 1, 2)
-    plt.plot(abs(np.fft.fft(s)), 'r')
-    plt.axis('tight')
-    setattr(plt.gca, 'YLim', [- 1, 1])
-    plt.title('Frekvenčna domena (abs): Fvz = {0} Hz, Frekvenca = {1} Hz, faza = {2} $\pi$'.format(Fvz, f1, faza1))
-    plt.pause(0.05)
+    ax[0].plot(s)
+    ax[0].set_ylim(-1, 1)
+    ax[0].set_title('Časovna domena: Fvz = {0} Hz, Frekvenca = {1} Hz, faza = {2} $\pi$'.format(Fvz, f1, round(faza1, 1)))
+
+    ax[1].plot(abs(np.fft.fft(s)), 'r')
+    ax[1].set_ylim(-1, 1)
+    ax[1].set_title('Frekvenčna domena (abs): Fvz = {0} Hz, Frekvenca = {1} Hz, faza = {2} $\pi$'.format(Fvz, f1, round(faza1, 1)))
+
+    plt.waitforbuttonpress()
 
 # S L I K E
 # -----------------------------------------------------------------------------------------
-# ukazi.m:181
-# vzorenje slik in Moire
-
-A = plt.imread(os.path.join(os.path.curdir, 'Moire.jpg'))
-plt.figure()
+# ukazi.m:181 -- NOTE: Preverjetno v Matlabu. Del ne deluje pravilno (označeno)
+# vzorčenje slik in Moire
+# Če datoteke ne najde, preverite pod "Settings -> Project: Name -> Project Structure" kje je root.
+A = pylab.array(Image.open(Path('./1-Vzorcenje/Moire.jpg')))
+plt.figure(figsize=(10, 10))
 plt.axis('off')
 plt.imshow(A)
 plt.title('originalna slika')
@@ -201,25 +210,29 @@ plt.figure()
 plt.axis('off')
 plt.imshow(A[::pvz, ::pvz])
 plt.title('podvzorčena slika: faktor podvzorčenja {0}'.format(pvz))
-st_bit = 0
 
+# Celotna slika bistveno svetlejša kot v matlabu. Pri bitni ločljivosti 2, sta namesto sivin rumena in modra barva.
+# Primerjaj podatke.
+st_bit = 2
 kvant = 2 ** (9 - st_bit)
-plt.figure()
-plt.imshow(np.dot((A[:, :, :] / kvant), kvant))
+plt.figure(figsize=(10, 10))
+plt.imshow(np.dot(np.round(A[:, :, :] / kvant), kvant))
 plt.title('slika pri bitni ločljivosti {0}'.format(st_bit))
-plt.figure()
-plt.subplot(2, 2, 1)
-plt.imshow(np.dot((A[:, :, :] / kvant), kvant))
-plt.title('slika pri bitni ločljivosti {0}'.format(st_bit))
-plt.subplot(2, 2, 2)
-plt.imshow(np.dot((A[:, :, 1] / kvant), kvant))
-plt.title('ravnina R pri bitni ločljivosti {0}'.format(st_bit))
-plt.subplot(2, 2, 3)
-plt.imshow(np.dot((A[:, :, 2] / kvant), kvant))
-plt.title('ravnina G pri bitni ločljivosti {0}'.format(st_bit))
-plt.subplot(2, 2, 4)
-plt.imshow(np.dot((A[:, :, 3] / kvant), kvant))
-plt.title('ravnina B pri bitni ločljivosti {0}'.format(st_bit))
+
+fig, ax = plt.subplots(2, 2)
+fig.tight_layout()
+
+ax[0, 0].imshow(np.dot(np.round(A[:, :, :] / kvant), kvant))
+ax[0, 0].set_title('slika pri bitni ločljivosti {0}'.format(st_bit))
+
+ax[0, 1].imshow(np.dot(np.round(A[:, :, 0] / kvant), kvant))
+ax[0, 1].set_title('ravnina R pri bitni ločljivosti {0}'.format(st_bit))
+
+ax[1, 0].imshow(np.dot(np.round(A[:, :, 1] / kvant), kvant))
+ax[1, 0].set_title('ravnina G pri bitni ločljivosti {0}'.format(st_bit))
+
+ax[1, 1].imshow(np.dot(np.round(A[:, :, 2] / kvant), kvant))
+ax[1, 1].set_title('ravnina B pri bitni ločljivosti {0}'.format(st_bit))
 
 # -----------------------------------------------------------------------------------------
 # ukazi.m:215
