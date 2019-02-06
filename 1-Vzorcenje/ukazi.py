@@ -16,7 +16,6 @@ import scipy.signal
 from matplotlib import cm  # color mapping
 import pylab as pylab
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
 import sounddevice as sd
 from pathlib import Path
 from PIL import Image
@@ -213,9 +212,10 @@ plt.title('podvzorčena slika: faktor podvzorčenja {0}'.format(pvz))
 
 # Celotna slika bistveno svetlejša kot v matlabu. Pri bitni ločljivosti 2, sta namesto sivin rumena in modra barva.
 # Primerjaj podatke.
-st_bit = 2
+st_bit = 0
 kvant = 2 ** (9 - st_bit)
 plt.figure(figsize=(10, 10))
+plt.axis('off')
 plt.imshow(np.dot(np.round(A[:, :, :] / kvant), kvant))
 plt.title('slika pri bitni ločljivosti {0}'.format(st_bit))
 
@@ -224,20 +224,28 @@ fig.tight_layout()
 
 ax[0, 0].imshow(np.dot(np.round(A[:, :, :] / kvant), kvant))
 ax[0, 0].set_title('slika pri bitni ločljivosti {0}'.format(st_bit))
+ax[0, 0].set_xticklabels([])
+ax[0, 0].set_yticklabels([])
 
 ax[0, 1].imshow(np.dot(np.round(A[:, :, 0] / kvant), kvant))
 ax[0, 1].set_title('ravnina R pri bitni ločljivosti {0}'.format(st_bit))
+ax[0, 1].set_xticklabels([])
+ax[0, 1].set_yticklabels([])
 
 ax[1, 0].imshow(np.dot(np.round(A[:, :, 1] / kvant), kvant))
 ax[1, 0].set_title('ravnina G pri bitni ločljivosti {0}'.format(st_bit))
+ax[1, 0].set_xticklabels([])
+ax[1, 0].set_yticklabels([])
 
 ax[1, 1].imshow(np.dot(np.round(A[:, :, 2] / kvant), kvant))
 ax[1, 1].set_title('ravnina B pri bitni ločljivosti {0}'.format(st_bit))
+ax[1, 1].set_xticklabels([])
+ax[1, 1].set_yticklabels([])
 
 # -----------------------------------------------------------------------------------------
-# ukazi.m:215
+# ukazi.m:215 -- Note: Work in progress.
 # spekter slik, Moire in Diskretna Fourierova transformacija (fft2)
-A = plt.imread(os.path.join(os.path.curdir, 'Moire.jpg'))
+A = pylab.array(Image.open(Path('./1-Vzorcenje/Moire.jpg')))
 plt.figure()
 plt.imshow(A)
 plt.title('originalna slika')
