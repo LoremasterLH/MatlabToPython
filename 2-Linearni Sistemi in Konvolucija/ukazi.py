@@ -587,7 +587,7 @@ plt.xlabel('as (s)')
 plt.ylabel('amplituda')
 sd.play(posnetek3D, Fs)
 '--------------------------------------------------------------------\n% AUDIO EFEKT DISTORTION\n% (C) ROSIS, LSPO, FERI, Univerza v Mariboru, Slovenia \n--------------------------------------------------------------------\n'
-## ################## akustina kitara
+## ################## akustična kitara
 y, Fs, nbits = wavread('SotW.wav', nargout=3)
 # ukazi.m:456
 player = audioplayer(y, Fs)

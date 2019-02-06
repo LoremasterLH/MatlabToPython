@@ -73,10 +73,10 @@ sound(1*posnetek,2*44100);
 % ali zaznate fazne spremembe? Spreminjajte faza1 med 0 in 2.0 in po�enite ta demo...
 Fvz = 44100;% vzor�evalna frekvenca
 T = 3; % �as v sekundah
-i = [0:T*Fvz-1]/Fvz; % vektor �asovnih indeksov
+i = [0:T*Fvz-1]/Fvz; % vektor �asovnih indeksovs
 f1 = 500; % frekvenca sinusoide
 A1 = 0.3; % amplituda sinusoide
-faza1 = 1.0; % faza sinusoide
+faza1 = 0.5; % faza sinusoide
 
 s=A1*sin(2*pi*f1*i+faza1*pi); % tvrojenje sinusoide
 s2=A1*sin(2*pi*f1*i+0*pi); % tvrojenje sinusoide
@@ -92,7 +92,7 @@ sound([s s2],Fvz);
 Fvz = 44100;% vzor�evalna frekvenca
 T = 3;
 i = [0:T*Fvz-1]/Fvz; % vektor �asovnih indeksov
-f1=50; % frekvenca sinusoide
+f1=2450; % frekvenca sinusoide
 A1=5.5; % amplituda sinusoide
 faza1=0.0; % faza sinusoide
 f2=f1+1; % frekvenca druge sinusoide

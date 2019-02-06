@@ -7,6 +7,9 @@
 # https://www.jetbrains.com/pycharm/download
 # Navodila za pridobitev potrebnih knjižnic:
 # https://www.jetbrains.com/help/pycharm/installing-uninstalling-and-upgrading-packages.html
+# Kratka navodila. Znotraj GUI knjižnice dodamo prek File->Settings->Project: Name->Project Interpreter.
+# V tem oknu na desni strani kliknemo na plus in vpišemo ime knjižnice.
+
 import numpy as np
 import scipy.signal
 from matplotlib import cm  # color mapping
@@ -23,41 +26,40 @@ f1 = 5  # frekvenca sinusoide
 A1 = 1  # amplituda sinusoide
 faza1 = 0.0  # faza sinusoide
 
-# ukazi.m:10
-# izris sinuside pri razlicnih fazah......................................................
-plt.figure()
-for faza1 in np.arange(0, 6.1, 0.1).reshape(-1):
+# ukazi.m:10 -- NOTE: Enak rezultat kot v Matlab 2017b
+# izris sinuside pri razlicnih fazah
+plt.figure()  # Ta vrstica ni nujna, če odpremo le eno okno.
+for faza1 in np.arange(0, 6.1, 0.1):
     plt.cla()
     # pri množenju z matriko je potrebno uporabiti numpy.np.dot(...)
     s = np.dot(A1, np.sin(np.dot(2 * np.pi * f1, i) + faza1 * np.pi))
     plt.plot(i, s)
-    plt.axis('tight')
     setattr(plt.gca, 'YLim', [-1, 1])
-    plt.title('Fvz = {0} Hz, Frekvenca = {1} Hz, faza = {2} $\pi$'.format(Fvz, f1, faza1))
+    plt.title('Fvz = {0} Hz, Frekvenca = {1} Hz, faza = {2} $\pi$'.format(Fvz, f1, round(faza1, 1)))
     plt.xlabel('Čas (s)')
     plt.ylabel('Amplituda (dB)')
+    plt.tight_layout()
     plt.waitforbuttonpress()
 
-# ukazi.m:23
-# izris sinusid pri razlicnih frekvencah...............................................
+# ukazi.m:23 -- NOTE: Preverjeno z Matlab
+# izris sinusid pri različnih frekvencah
 faza1 = 0.0
 plt.figure()
-for f1 in np.arange(Fvz + 1).reshape(-1):
-    plt.cla()
+for f1 in np.arange(Fvz + 1):
+    plt.cla()  # clear axes
     s = np.dot(A1, np.sin(np.dot(2 * np.pi * f1, i) + faza1 * np.pi))
     plt.plot(i, s)
-    plt.autoscale(False)
     plt.ylim(-1, 1)
     plt.title('Fvz = {0} Hz, Frekvenca = {1} Hz, faza = {2} $\pi$'.format(Fvz, f1, faza1))
     plt.xlabel('Čas (s)')
     plt.ylabel('Amplituda (dB)')
-    plt.pause(0.05)
+    plt.pause(0.025)
 
-# ukazi.m:37
-# ########################### izris sinusoid s frekvenco f1 in Fvz-f1.........................
-plt.figure()
+# ukazi.m:37 -- NOTE: Preverjeno z Matlab
+# izris sinusoid s frekvenco f1 in Fvz-f1
 f1 = 1
 s1 = np.sin(np.dot(2 * np.pi * f1, i) + faza1 * np.pi)
+plt.figure()
 plt.plot(i, s1, 'b')
 f2 = Fvz - f1
 s2 = np.sin(np.dot(np.dot(np.dot(2, np.pi), f2), i) + np.dot(faza1, np.pi))
@@ -65,19 +67,20 @@ plt.plot(i, s2, 'r')
 plt.xlabel('Čas (s)')
 plt.ylabel('Amplituda')
 plt.title('Fvz = {0} Hz, Frekvenca1 = {1} Hz, Frekvenca2 = {2} Hz, faza = {3} $\pi$'.format(Fvz, f1, f2, faza1))
-plt.axis('tight')
+plt.tight_layout()
 # ----------------------------------------------------------------------------------------
 
 # glej tudi primera v Mathematici: (WheelIllusion.nbp in SamplingTheorem.nbp)
 
 # V Z O R Č E N J E    Z V O K A
 # -----------------------------------------------------------------------------------------
-# ukazi.m:56
-# vzorenje zvoka
+# ukazi.m:56 -- NOTE: Primerljiv rezultat v Matlab
+# vzorčenje zvoka
 Fs = 44100  # vzorčevalna frekvenca
 bits = 16  # bitna ločljivost
 nchans = 1  # 1 (mono), 2 (stereo).
 posnetek = sd.rec(5 * Fs, Fs, nchans, blocking=True)
+
 plt.figure()
 plt.plot(posnetek)
 
@@ -86,22 +89,24 @@ sd.play(posnetek, 44100 / 2)
 sd.play(posnetek, 2 * 44100)
 
 # -----------------------------------------------------------------------------------------
-# ukazi.m:73
+# ukazi.m:73 -- NOTE: Primerljiv rezultat v Matlab
 # ali zaznate fazne spremembe? Spreminjajte faza1 med 0 in 2.0 in poženite ta demo...
 Fvz = 44100  # vzorčevalna frekvenca
 T = 3  # čas v sekundah
-i = np.arange(0.0, T * Fvz + 1, 1) / Fvz  # vektor časovnih indeksov
+i = np.arange(0.0, T * Fvz, 1) / Fvz  # vektor časovnih indeksov
 f1 = 500  # frekvenca sinusoide
 A1 = 0.3  # amplituda sinusoide
 faza1 = 1.0  # faza sinusoide
-s = np.dot(A1, np.sin(np.dot(2 * np.pi * f1, i) + faza1 * np.pi))
-s2 = np.dot(A1, np.sin(np.dot(2 * np.pi * f2, i) + 0 * np.pi))
-sd.play(np.concatenate((s, s2)), Fvz)  # dvojni oklepaji pri concatenate, ker sta oba prvi parameter
+
+s = np.dot(A1, np.sin(np.dot(2 * np.pi * f1, i) + faza1 * np.pi))  # tvorjenje sinusoide
+s2 = np.dot(A1, np.sin(np.dot(2 * np.pi * f1, i) + 0 * np.pi))  # tvorjenje sinusoide
+
+sd.play(np.concatenate((s, s2)), Fvz)  # pozor, dvojni oklepaji pri concatenate, ker sta s1 in s2 en parameter!
 # "navadna" polja združiš z s+s2, v numpy.array pa to sešteje istoležne elemente
 
 
 # -----------------------------------------------------------------------------------------
-# ukazi.m:88
+# ukazi.m:88 -- NOTE: Primerljiv rezultat v Matlab
 # trije poskusi: 1. f1 = 50;
 #                2. f1 = 450;
 #                3. f1 = 1450;
@@ -109,7 +114,7 @@ sd.play(np.concatenate((s, s2)), Fvz)  # dvojni oklepaji pri concatenate, ker st
 
 Fvz = 44100  # vzorčevalna frekvenca
 T = 3  # čas v sekundah
-i = np.arange(T * Fvz + 1) / Fvz  # vektor časovnih indeksov
+i = np.arange(T * Fvz) / Fvz  # vektor časovnih indeksov
 f1 = 50  # frekvenca sinusoide
 A1 = 5.5  # amplituda sinusoide
 faza1 = 0.0  # faza sinusoide
@@ -117,14 +122,14 @@ f2 = f1 + 1  # frekvenca druge sinusoide
 
 s1 = np.dot(A1, np.sin(np.dot(2 * np.pi * f1, i) + faza1 * np.pi))  # tvorjenje prve sinusoide
 s2 = np.dot(A1, np.sin(np.dot(2 * np.pi * f2, i) + faza1 * np.pi))  # tvorjenje druge sinusoide
-sd.play(np.concatenate((s, s2)), Fvz)
+sd.play(np.concatenate((s1, s2)), Fvz)
 
 # -----------------------------------------------------------------------------------------
-# ukazi.m:106
+# ukazi.m:106 -- NOTE: Primerljiv rezultat v Matlab
 # ali zaznate zvok netopirja pri 90000 Hz? Nyquist?
-Fvz = 44100
+Fvz = 44100  # vzorčevalna frekvenca
 T = 3
-i = np.arange(T * Fvz + 1) / Fvz  # vektor časovnih indeksov
+i = np.arange(T * Fvz) / Fvz  # vektor časovnih indeksov
 fnetopir = 140000  # frekvenca sinusoide
 A1 = 5.5  # amplituda sinusoide
 faza1 = 1.0  # faza sinusoide
@@ -132,8 +137,8 @@ faza1 = 1.0  # faza sinusoide
 s = np.dot(A1, np.sin(np.dot(2 * np.pi * fnetopir, i) + faza1 * np.pi))  # tvorjenje sinusoide
 sd.play(s, Fvz)
 
-# ukazi.m:118
-# izris sinuside pri razlicnih fazah (verzija 2)......................................................
+# ukazi.m:118 -- NOTE: Work in progress; numpy fft behaves differently from matlab?
+# izris sinuside pri razlicnih fazah (verzija 2)
 Fvz = 100
 T = 1
 i = np.arange(T * Fvz + 1) / Fvz
@@ -143,23 +148,21 @@ faza1 = 0.0
 
 # spremninjanje frekvence...
 plt.close('all')
-# horribly slow
-plt.figure()
-for f1 in np.arange(0, Fvz + 1).reshape(-1):
-    plt.clf()
+fig, ax = plt.subplots(2)
+for f1 in np.arange(0, Fvz+1):
     s = np.sin(np.dot(2 * np.pi * f1, i) + faza1 * np.pi)
-    plt.subplot(2, 1, 1)
-    plt.plot(s)
-    plt.axis('tight')
-    setattr(plt.gca, 'YLim', [-1, 1])
-    plt.title('Časovna domena: Fvz = {0} Hz, Frekvenca = {1} Hz, faza = {2} $\pi$'.format(Fvz, f1, faza1))
-    plt.subplot(2, 1, 2)
+    ax[0].plot(s)
+    ax[0].set_title('Časovna domena: Fvz = {0} Hz, Frekvenca = {1} Hz, faza = {2} $\pi$'.format(Fvz, f1, faza1))
+    ax[0].set_ylim(-1, 1)
 
-    plt.plot(abs(np.fft.fft(s)), 'r')
-    plt.axis('tight')
-    setattr(plt.gca, 'YLim', [-1, 1])
-    plt.title('Frekvenčna domena (abs): Fvz = {0} Hz, Frekvenca = {1} Hz, faza = {2} $\pi$'.format(Fvz, f1, faza1))
+    ax[1].plot(abs(np.fft.fft(s)), 'r')
+    ax[1].set_title('Frekvenčna domena (abs): Fvz = {0} Hz, Frekvenca = {1} Hz, faza = {2} $\pi$'.format(Fvz, f1, faza1))
+    ax[1].set_ylim(-1, 1)
+
     plt.waitforbuttonpress()
+    ax[0].clear()  # clear axes for next
+    ax[1].clear()
+
 
 # in faze... (več o tem na naslednjih vajah)
 f1 = 5
