@@ -19,6 +19,8 @@ import matplotlib.pyplot as plt
 import sounddevice as sd
 from pathlib import Path
 from PIL import Image
+from mpl_toolkits.mplot3d import axes3d
+from mpl_toolkits.mplot3d import art3d
 
 # ----------------------------------------------------------------------------------------
 # Vzorčenje in Nyquistov teorem;
@@ -211,8 +213,8 @@ plt.imshow(A[::pvz, ::pvz])
 plt.title('podvzorčena slika: faktor podvzorčenja {0}'.format(pvz))
 
 # Celotna slika bistveno svetlejša kot v matlabu. Pri bitni ločljivosti 2, sta namesto sivin rumena in modra barva.
-# Primerjaj podatke.
-st_bit = 0
+# Podatki?
+st_bit = 2
 kvant = 2 ** (9 - st_bit)
 plt.figure(figsize=(10, 10))
 plt.axis('off')
@@ -246,31 +248,59 @@ ax[1, 1].set_yticklabels([])
 # ukazi.m:215 -- Note: Work in progress.
 # spekter slik, Moire in Diskretna Fourierova transformacija (fft2)
 A = pylab.array(Image.open(Path('./1-Vzorcenje/Moire.jpg')))
-plt.figure()
+plt.figure().set_size_inches(10, 10)
 plt.imshow(A)
 plt.title('originalna slika')
+plt.axis('off')
+
 plt.close('all')
 
+# ukazi.m:224
+B = np.double(A[:, :, 0])
+
+fig = plt.figure()
+fig.set_size_inches(7, 7)
+ax = fig.add_subplot(111, projection='3d')
+X = Y = np.array([np.arange(100), ]*100)  # Creates a 100 * 100 array
+Z = abs(np.fft.fft2(B - np.mean(np.ravel(B)), s=(100, 100)))
+wire = ax.plot_wireframe(X, Y, Z, rstride=10, cstride=10)
+
+# Retrive data from internal storage of plot_wireframe, then delete it
+nx, ny, _ = np.shape(wire._segments3d)
+wire_x = np.array(wire._segments3d)[:, :, 0].ravel()
+wire_y = np.array(wire._segments3d)[:, :, 1].ravel()
+wire_z = np.array(wire._segments3d)[:, :, 2].ravel()
+wire.remove()
+
+# create data for a LineCollection
+wire_x1 = np.vstack([wire_x, np.roll(wire_x, 1)])
+wire_y1 = np.vstack([wire_y, np.roll(wire_y, 1)])
+wire_z1 = np.vstack([wire_z, np.roll(wire_z, 1)])
+to_delete = np.arange(0, nx*ny, ny)
+wire_x1 = np.delete(wire_x1, to_delete, axis=1)
+wire_y1 = np.delete(wire_y1, to_delete, axis=1)
+wire_z1 = np.delete(wire_z1, to_delete, axis=1)
+scalars = np.delete(wire_z, to_delete)
+
+segs = [list(zip(xl, yl, zl)) for xl, yl, zl in \
+                 zip(wire_x1.T, wire_y1.T, wire_z1.T)]
+
+# Plots the wireframe by a  a line3DCollection
+my_wire = art3d.Line3DCollection(segs, cmap="hsv")
+my_wire.set_array(scalars)
+ax.add_collection(my_wire)
+
+plt.colorbar(my_wire)
+plt.show()
+
+
+# ukazi.m:226
 B = np.double(A[:, :, 1])
 X, Y = np.meshgrid(np.arange(100), np.arange(100))
 Z = abs(np.fft.fft2(B - np.mean(np.ravel(B)))[0:100, 0:100])
 colors = cm.Blues(Z)
 rcount, ccount, _ = colors.shape
 
-fig = plt.figure()
-fig.set_size_inches(7, 7)
-ax = fig.gca(projection='3d')
-surf = ax.plot_surface(X, Y, Z, rcount=rcount, ccount=ccount, facecolors=colors, shade=False)
-surf.set_facecolor((0, 0, 0, 0))
-plt.title('R ravnina')
-plt.show()
-
-# ukazi.m:226
-B = np.double(A[:, :, 2])
-X, Y = np.meshgrid(np.arange(100), np.arange(100))
-Z = abs(np.fft.fft2(B - np.mean(np.ravel(B)))[0:100, 0:100])
-colors = cm.Blues(Z)
-rcount, ccount, _ = colors.shape
 
 fig = plt.figure()
 fig.set_size_inches(7, 7)
@@ -281,7 +311,7 @@ plt.title('G ravnina')
 plt.show()
 
 # ukazi.m:228
-B = np.double(A[:, :, 3])
+B = np.double(A[:, :, 2])
 X, Y = np.meshgrid(np.arange(100), np.arange(100))
 Z = abs(np.fft.fft2(B - np.mean(np.ravel(B)))[0:100, 0:100])
 colors = cm.Blues(Z)
