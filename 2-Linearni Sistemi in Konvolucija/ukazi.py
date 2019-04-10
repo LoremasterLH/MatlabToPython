@@ -6,45 +6,52 @@
 import numpy as np
 import scipy.signal
 from matplotlib import cm  # color mapping
+import pylab as pylab
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-import plotly.plotly as py
-import plotly.graph_objs as go
+import sounddevice as sd
+from pathlib import Path
 from PIL import Image
+from mpl_toolkits.mplot3d import axes3d
+from mpl_toolkits.mplot3d import art3d
+from os import system, name
 
-'--------------------------------------------------------------------\n% LINEARNI SISTEMI IN KONVOLUCIJA\n% (C) ROSIS 2012, LSPO, FERI, Univerza v Mariboru, Slovenia \n% \n% Poglavje 1: 1D signali\n'
+# --------------------------------------------------------------------
+# LINEARNI SISTEMI IN KONVOLUCIJA
+# (C) ROSIS 2012, LSPO, FERI, Univerza v Mariboru, Slovenia
+#
+# Poglavje 1: 1D signali
+# --------------------------------------------------------------------
 # Konvolucija: preprosti primeri z for zanko
-
+#
 # originalna formula za konvolucijo (samo vzročni del):
-
+#
 #             inf
 #            ---
 #     y(n) = \    x(k)*h(n-k)            za n = 0,1,2,...
 #            /
 #            ---
 #             k=0
-
+#
 # v našem primeru je prvi element x oz. h na indeksu 1 (in ne na 0, kot je to v zgornji formuli), torej
-
+#
 #             inf
 #            ---
 #     y(n) = \    x(k+1)*h(n-k)          za n = 1,2,3,...
 #            /
 #            ---
 #             k=0
-
+#
 # OPOMBA: pri n-k se vpliv postavitve začetnega indeksa izniči: n+1 - (k+1) = n-k
-
+#
 # n je smiselno omejiti z zgornjo mejo len(x)+len(h)-1, saj so naprej same ničle...
 # zaradi h(n-k) mora biti n-k med 1 in len(h), torej mora biti k med n-len(h) in n-1, ampak samo za pozitivne n-k!
 # zaradi x(k+1) mora teči k med 0 in len(x)-1
 
-# ukazi.m:33
-print("\n" * 80)  # clc
+print("\n" * 80)  # clc - Python nima funkcionalnosti, ki bi konsistentno počistila konzolo. Lahko izbrišeš.
+
 x = (1, 2, 3, 4, 3, 2, 1)
 h = (1, 2, 1)
 
-# ukazi.m:37
 y = np.zeros(len(x) + len(h) - 1).tolist()  # dolžina izhoda, pretvorimo v python list za izris
 for n in range(0, len(x) + len(h) - 1):  # V Pythonu je prvi element na indexu 0.
     print('...............')
@@ -56,7 +63,7 @@ for n in range(0, len(x) + len(h) - 1):  # V Pythonu je prvi element na indexu 0
 y2 = np.convolve(x, h).tolist()
 plt.figure()
 blue, = plt.plot(y, 'b-', linewidth=2, label='for zanka')
-red, = plt.plot(y2, 'r:', linewidth=2, label='convolve')
+red, = plt.plot(y2, 'r:', linewidth=2, label='conv')
 plt.xlabel('vzorci')
 plt.ylabel('amplituda')
 plt.legend([blue, red], [blue.get_label(), red.get_label()])
@@ -66,16 +73,18 @@ plt.legend([blue, red], [blue.get_label(), red.get_label()])
 print("\n" * 80)  # clc
 plt.close('all')
 
-# ukazi.m:65
+# ukazi.m:65 -- Note: Prevejeno z Matlab
 x = [1] + np.zeros(25).tolist() + [2] + np.zeros(25).tolist() + [1] + np.zeros(25).tolist()
 h = np.arange(0, 1.1, 0.1).tolist() + np.arange(1, -0.025, - 0.025).tolist()
 
 # ukazi.m:68
 f, ax = plt.subplots(2)
+# subplot(2,1,1)
 ax[0].plot(x, 'b', lineWidth=2)
 ax[0].set_xlabel('vzorci')
 ax[0].set_ylabel('amplituda')
 ax[0].set_title('vhod (x)')
+# subplot(2,1,2)
 ax[1].plot(h, 'g', lineWidth=2)
 ax[1].set_xlabel('vzorci')
 ax[1].set_ylabel('amplituda')
@@ -99,19 +108,19 @@ for n in range(0, len(x) + len(h) - 1):
 plt.close()
 
 ######################
-# ukazi.m:91
+# ukazi.m:91 -- Note: Prevejeno z Matlab
 f, ax = plt.subplots(3)
-# subplot(3,1,1)
+
 ax[0].plot(x, lineWidth=2)
 ax[0].set_title('x')
 ax[0].set_xlabel('vzorci')
 ax[0].set_ylabel('amplituda')
-# subplot(3,1,2)
+
 ax[1].plot(h, 'g', lineWidth=2)
 ax[1].set_title('h')
 ax[1].set_xlabel('vzorci')
 ax[1].set_ylabel('amplituda')
-# subplot(3,1,3)
+
 ax[2].plot(y, 'r', lineWidth=2)
 ax[2].set_title('y')
 ax[2].set_xlabel('vzorci')
@@ -157,46 +166,46 @@ for n in range(0, len(x) + len(h) - 1):
     plt.pause(0.01)
 
 ## #########
-# ukazi.m:138
+# ukazi.m:138 -- Note: Preverjeno z Matlab1
 f, ax = plt.subplots(3)
-# subplot(3,1,1)
+
 ax[0].plot(x, lineWidth=2)
 ax[0].set_title('x')
 ax[0].set_xlabel('vzorci')
 ax[0].set_ylabel('amplituda')
-# subplot(3,1,2)
+
 ax[1].plot(h, 'g', lineWidth=2)
 ax[1].set_title('h')
 ax[1].set_xlabel('vzorci')
 ax[1].set_ylabel('amplituda')
-# subplot(3,1,3)
+
 ax[2].plot(y, 'r', lineWidth=2)
 ax[2].set_title('y')
 ax[2].set_xlabel('vzorci')
 ax[2].set_ylabel('amplituda')
 plt.tight_layout()
 
-'--------------------------------------------------------------------' \
-'% Konvoluvcija: preprosti primeri s funkcijo np.convolve()' \
-'%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
+# --------------------------------------------------------------------
+# Konvoluvcija: preprosti primeri s funkcijo np.convolve()
+# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-# ukazi.m:156
+# ukazi.m:156 -- Note: Preverjeno z Matlab
 x = np.zeros(50).tolist() + [1] + np.zeros(50).tolist()
 h = np.arange(0, 1.1, 0.1).tolist() + np.arange(1, -0.025, -0.025).tolist()
 # h = np.ones(22).tolist();
 
 f, ax = plt.subplots(3)
-# subplot(3,1,1)
+
 ax[0].plot(x, lineWidth=2)
 ax[0].set_title('x')
 ax[0].set_xlabel('vzorci')
 ax[0].set_ylabel('amplituda')
-# subplot(3,1,2)
+
 ax[1].plot(h, 'g', lineWidth=2)
 ax[1].set_title('h')
 ax[1].set_xlabel('vzorci')
 ax[1].set_ylabel('amplituda')
-# subplot(3,1,3)
+
 ax[2].plot(np.convolve(x, h).tolist(), 'r', lineWidth=2)
 ax[2].set_title('conv(x,h)')
 ax[2].set_xlabel('vzorci')
@@ -204,23 +213,23 @@ ax[2].set_ylabel('amplituda')
 plt.tight_layout()
 
 ###########################################
-# ukazi.m:176
+# ukazi.m:176 -- Note: Preverjeno z Matlab
 x = np.zeros(50).tolist() + [1] + np.zeros(25).tolist() + [1] + np.zeros(50).tolist()
 h = np.arange(0, 1.1, 0.1).tolist() + np.arange(1, -0.025, -0.025).tolist()
 # h = np.ones(22).tolist();
 
 f, ax = plt.subplots(3)
-# subplot(3,1,1)
+
 ax[0].plot(x, lineWidth=2)
 ax[0].set_title('x')
 ax[0].set_xlabel('vzorci')
 ax[0].set_ylabel('amplituda')
-# subplot(3,1,2)
+
 ax[1].plot(h, 'g', lineWidth=2)
 ax[1].set_title('h')
 ax[1].set_xlabel('vzorci')
 ax[1].set_ylabel('amplituda')
-# subplot(3,1,3)
+
 ax[2].plot(np.convolve(x, h).tolist(), 'r', lineWidth=2)
 ax[2].set_title('conv(x,h)')
 ax[2].set_xlabel('vzorci')
@@ -229,7 +238,7 @@ plt.tight_layout()
 
 ###########################################
 # Bolj kompleksen primer....
-# ukazi.m:197
+# ukazi.m:197 -- Note: Preverjeno z Matlab
 d = 20  # razmik impulzov v x
 x = np.zeros(50).tolist() + [1] + np.zeros(d).tolist() + [1] + np.zeros(d).tolist() + [1] + np.zeros(50).tolist()
 # h = np.arange(0,1.1,0.1).tolist() + np.arange(1,-0.025,-0.025).tolist()
@@ -254,7 +263,7 @@ ax[2].set_ylabel('amplituda')
 plt.tight_layout()
 
 '--------------------------------------------------------------------'
-# ALGEBRAI�NE LASTNOSTI KONVOLUCIJE
+# ALGEBRAIČNE LASTNOSTI KONVOLUCIJE
 # KOMUTATIVNOST
 #     f * g = g * f ,
 # 
@@ -264,13 +273,13 @@ plt.tight_layout()
 # DISTRIBUTIVNOST
 #     f * (g + h) = (f * g) + (f * h) ,
 # 
-# ASOCIATIVNOST S SKALARNIM MNO�ENJEM
+# ASOCIATIVNOST S SKALARNIM MNOŽENJEM
 #     a (f * g) = (a f) * g = f * (a g) ,
 # 
 # KOMUTATIVNOST ###########################################
 #     x * h = h * x ,
 
-# ukazi.m:233
+# ukazi.m:233 -- Note: Preverjeno z Matlab
 x = np.zeros(50).tolist() + [1] + np.zeros(50).tolist()
 h = np.arange(0, 1.1, 0.1).tolist() + np.arange(1, -0.025, -0.025).tolist()
 
@@ -287,7 +296,7 @@ plt.tight_layout()
 
 # ASOCIATIVNOST ###########################################
 #     g * (x * h) = (g * x) * h ,
-# ukazi.m:247
+# ukazi.m:247 -- Note: Preverjeno z Matlab
 x = np.zeros(50).tolist() + [1] + np.zeros(50).tolist()
 h = np.arange(0, 1.1, 0.1).tolist() + np.arange(1, -0.025, -0.025).tolist()
 g = np.sin(np.arange(0, np.pi, 0.1)).tolist()
@@ -323,23 +332,23 @@ plt.tight_layout()
 
 # ASOCIATIVNOST S SKALARNIM MNOŽENJEM ###########################################
 #     a (x * h) = (a x) * h = x * (a h) ,
-# ukazi.m:277
+# ukazi.m:277 -- Note: Preverjeno z Matlab
 x = np.concatenate((np.zeros(50), [1], np.zeros(50)))  # Na tak način združimo polja numpyarray
 h = np.sin(np.arange(0, np.pi, 0.05))
 a = np.random.randn()
 
 f, ax = plt.subplots(3)
-# subplot(3,1,1)
+
 ax[0].plot((a * np.convolve(x, h)).tolist(), 'r', lineWidth=2)
 ax[0].set_title('ASOCIATIVNOST S SKALARNIM MNOŽENJEM: a*conv(x,h)')
 ax[0].set_xlabel('vzorci')
 ax[0].set_ylabel('amplituda')
-# subplot(3,1,2)
-ax[1].plot(np.convolve(a * x, h), 'g', lineWidth=2)
+
+ax[1].plot(np.convolve(a * x, h), 'r', lineWidth=2)
 ax[1].set_title('ASOCIATIVNOST S SKALARNIM MNOŽENJEM: conv(a*x,h)')
 ax[1].set_xlabel('vzorci')
 ax[1].set_ylabel('amplituda')
-# subplot(3,1,3)
+
 ax[2].plot(np.convolve(x, a * h).tolist(), 'r', lineWidth=2)
 ax[2].set_title('ASOCIATIVNOST S SKALARNIM MNOŽENJEM: conv(x,a*h)')
 ax[2].set_xlabel('vzorci')
@@ -357,7 +366,7 @@ import os
 import time
 
 ############################################################################################################################################################################ here
-# ukazi.m:298
+# ukazi.m:298 -- Note: Preverjeno z Matlab
 print("\n" * 80)  # clc
 plt.close('all')
 Fs = 44100
@@ -367,42 +376,42 @@ sd.play(posnetek, Fs)
 
 # ukazi.m:308
 f, ax = plt.subplots(2)
-ax[0].plot(np.arange(0.0, len(posnetek)) / Fs, posnetek[:, 0], lineWidth=2)
+ax[0].plot(np.arange(0.0, len(posnetek)) / Fs, posnetek[:, 0], lineWidth=0.4)
 ax[0].set_title('kanal 1')
 ax[0].set_xlabel('čas (s)')
 ax[0].set_ylabel('amplituda')
-ax[1].plot(np.arange(0.0, len(posnetek)) / Fs, posnetek[:, 1], lineWidth=2)
+ax[1].plot(np.arange(0.0, len(posnetek)) / Fs, posnetek[:, 1], lineWidth=0.4)
 ax[1].set_title('kanal 2')
 ax[1].set_xlabel('čas (s)')
 ax[1].set_ylabel('amplituda')
 plt.tight_layout()
 
-############# naložimo impulzni odziv sobe (dostopen na spletu) ########################
+# ############ naložimo impulzni odziv sobe (dostopen na spletu) ########################
 # impulzni odzivi posameznih prostorov: http://www.voxengo.com/impulses/
-# ukazi.m:321
+# ukazi.m:321 -- Note: Preverjeno z Matlab
 # h,Fs,bits=wavread('IMreverbs/Going Home.wav')
 # Če datoteke ne najde, verjetno išče v mapi prej odprte. Najlažje se reši, če zapreš IDE in ponovno odpreš to datoteko.
-Fs, h = wavfile.read('../IMreverbs/Going Home.wav')
+Fs, h = wavfile.read('./2-Linearni Sistemi in Konvolucija/IMreverbs/Going Home.wav')
 h = h / np.linalg.norm(h)
 sd.play(50 * h, Fs)
 
 # ukazi.m:325
 f, ax = plt.subplots(2)
-ax[0].plot(np.arange(0, len(h)) / Fs, h[:, 0], 'k', lineWidth=2)
+ax[0].plot(np.arange(0, len(h)) / Fs, h[:, 0], 'k', lineWidth=0.4)
 ax[0].set_title('kanal 1')
 ax[0].set_xlabel('čas (s)')
 ax[0].set_ylabel('amplituda')
-ax[1].plot(np.arange(0, len(h)) / Fs, h[:, 1], 'k', lineWidth=2)
+ax[1].plot(np.arange(0, len(h)) / Fs, h[:, 1], 'k', lineWidth=0.4)
 ax[1].set_title('kanal 2')
 ax[1].set_xlabel('čas (s)')
 ax[1].set_ylabel('amplituda')
 plt.tight_layout()
 
-############# konvolucija v časovni domeni ########################
-# ukazi.m:337
+# ############ konvolucija v časovni domeni ########################
+# ukazi.m:337 -- Note: Preverjeno z Matlab
 efekt = np.ndarray(shape=(len(posnetek) + len(h) - 1, 2))
 tic = time.time()
-# Proces traja kakšne pol minute, tako da ne skrbet, da traja predolgo.
+# Proces je počasen, tako da ne skrbet, da traja predolgo. Cca 2 min pri meni.
 efekt[:, 0] = np.convolve(posnetek[:, 0], h[:, 0])
 efekt[:, 1] = np.convolve(posnetek[:, 1], h[:, 1])
 toc = time.time() - tic
@@ -410,24 +419,24 @@ print('Pretekel čas: {0} sekund'.format(toc))
 sd.play(efekt, Fs)
 
 f, ax = plt.subplots(2)
-ax[0].plot(np.arange(0, len(efekt)) / Fs, efekt[:, 0], 'r')
-ax[0].plot(np.arange(0, len(posnetek)) / Fs, posnetek[:, 0])
+ax[0].plot(np.arange(0, len(efekt)) / Fs, efekt[:, 0], 'r', lineWidth=0.4)
+ax[0].plot(np.arange(0, len(posnetek)) / Fs, posnetek[:, 0], lineWidth=0.4)
 ax[0].set_title('kanal 1')
 ax[0].set_xlabel('čas (s)')
 ax[0].set_ylabel('amplituda')
-ax[1].plot(np.arange(0, len(efekt)) / Fs, efekt[:, 1], 'r')
-ax[1].plot(np.arange(0, len(posnetek)) / Fs, posnetek[:, 1])
+ax[1].plot(np.arange(0, len(efekt)) / Fs, efekt[:, 1], 'r', lineWidth=0.4)
+ax[1].plot(np.arange(0, len(posnetek)) / Fs, posnetek[:, 1], lineWidth=0.4)
 ax[1].set_title('kanal 2')
 ax[1].set_xlabel('čas (s)')
 ax[1].set_ylabel('amplituda')
 plt.tight_layout()
 
-############### konvolucija v frekvenčni domeni #######################
-# ukazi.m:359
+# ############## konvolucija v frekvenčni domeni #######################
+# ukazi.m:359 -- Note: Preverjeno z Matlab
 tic = time.time()
 X = np.fft.fft(np.concatenate((posnetek[:, 0], np.zeros(len(h[:, 0]) - 1))))
 Y = np.fft.fft(np.concatenate((h[:, 0], np.zeros(len(posnetek[:, 0]) - 1))))
-posnetek = np.empty([X.size, 2])  # Initialise new np array as python does not do this automatically to fit data.
+efekt = np.empty([X.size, 2])  # Initialise new np array as python does not do this automatically to fit data.
 efekt[:, 0] = np.fft.ifft(np.multiply(X, Y))
 toc = time.time() - tic
 print('Pretekel čas: {0} sekund'.format(toc))
@@ -440,13 +449,13 @@ toc = time.time() - tic
 print('Pretekel čas: {0} sekund'.format(toc))
 
 f, ax = plt.subplots(2)
-ax[0].plot(np.arange(0, len(efekt)) / Fs, efekt[:, 0], 'r')
-ax[0].plot(np.arange(0, len(posnetek)) / Fs, posnetek[:, 0])
+ax[0].plot(np.arange(0, len(efekt)) / Fs, efekt[:, 0], 'r', lineWidth=0.4)
+ax[0].plot(np.arange(0, len(posnetek)) / Fs, posnetek[:, 0], lineWidth=0.4)
 ax[0].set_title('kanal 1')
 ax[0].set_xlabel('čas (s)')
 ax[0].set_ylabel('amplituda')
-ax[1].plot(np.arange(0, len(efekt)) / Fs, efekt[:, 1], 'r')
-ax[1].plot(np.arange(0, len(posnetek)) / Fs, posnetek[:, 1])
+ax[1].plot(np.arange(0, len(efekt)) / Fs, efekt[:, 1], 'r', lineWidth=0.4)
+ax[1].plot(np.arange(0, len(posnetek)) / Fs, posnetek[:, 1], lineWidth=0.4)
 ax[1].set_title('kanal 2')
 ax[1].set_xlabel('čas (s)')
 ax[1].set_ylabel('amplituda')
@@ -456,17 +465,18 @@ sd.play(efekt, Fs)
 
 '--------------------------------------------------------------------' \
 '% kako pa je s konvolucijo v časovnem prostoru, če so signali dolgi'
-# ukazi.m:388
-Fs, h = wavfile.read('../IMreverbs/Five columns.wav')
+# ukazi.m:388 -- Note: Preverjeno z Matlab
+Fs, h = wavfile.read('./2-Linearni Sistemi in Konvolucija/IMreverbs/Five columns.wav')
 h = h / np.linalg.norm(h)
 
-# Recording not working at this point (for me).
-###### posnamemo govor ###########################################
+# ##### posnamemo govor ###########################################
 # 30 sekund
 posnetek = sd.rec(30 * Fs, Fs, 2, blocking=True)
 sd.play(posnetek, Fs)
-############### konvolucija v asovni domeni #######################
+# ############## konvolucija v časovni domeni #######################
 tic = time.time()
+# Lahko traja nekaj minut.
+efekt = np.empty([posnetek.size, 2])  # Initialise new np array as python does not do this automatically to fit data.
 efekt[:, 0] = np.convolve(posnetek[:, 0], h[:, 0])
 efekt[:, 1] = np.convolve(posnetek[:, 1], h[:, 1])
 toc = time.time() - tic
