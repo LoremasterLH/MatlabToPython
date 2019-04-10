@@ -245,7 +245,7 @@ ax[1, 1].set_xticklabels([])
 ax[1, 1].set_yticklabels([])
 
 # -----------------------------------------------------------------------------------------
-# ukazi.m:215 -- Note: Work in progress.
+# ukazi.m:215 -- Note: Plotting not working properly yet. Data shown in 2D.
 # spekter slik, Moire in Diskretna Fourierova transformacija (fft2)
 A = pylab.array(Image.open(Path('./1-Vzorcenje/Moire.jpg')))
 plt.figure().set_size_inches(10, 10)
@@ -294,7 +294,7 @@ plt.colorbar(my_wire)
 plt.show()
 
 
-# ukazi.m:226
+# ukazi.m:226 -- Note: Not implemented. Same chart as previous section.
 B = np.double(A[:, :, 1])
 X, Y = np.meshgrid(np.arange(100), np.arange(100))
 Z = abs(np.fft.fft2(B - np.mean(np.ravel(B)))[0:100, 0:100])
@@ -310,7 +310,7 @@ surf.set_facecolor((0, 0, 0, 0))
 plt.title('G ravnina')
 plt.show()
 
-# ukazi.m:228
+# ukazi.m:228 -- Note: Not implemented. Same chart as previous section.
 B = np.double(A[:, :, 2])
 X, Y = np.meshgrid(np.arange(100), np.arange(100))
 Z = abs(np.fft.fft2(B - np.mean(np.ravel(B)))[0:100, 0:100])
@@ -325,7 +325,7 @@ surf.set_facecolor((0, 0, 0, 0))
 plt.title('B ravnina')
 plt.show()
 
-# ukazi.m:231
+# ukazi.m:231 -- Note: Not implemented. Same chart as previous section.
 # prevzorčena slika..................................
 pvz = 4
 B = np.double(A[0::pvz, 0::pvz, 1])
@@ -357,7 +357,7 @@ surf.set_facecolor((0, 0, 0, 0))
 plt.title('G ravnina, po podvzorenju s faktorjem {0}'.format(pvz))
 plt.show()
 
-# ukazi.m:237
+# ukazi.m:237 -- Note: Not implemented. Same chart as previous section.
 B = np.double(A[0::pvz, 0::pvz, 3])
 X, Y = np.meshgrid(np.arange(100), np.arange(100))
 Z = abs(np.fft.fft2(B - np.mean(np.ravel(B)))[0:100, 0:100])
@@ -374,21 +374,22 @@ plt.show()
 
 # -----------------------------------------------------------------------------------------
 # ukazi.m:241
-# podvzorenje slik in operator povpreenja
+# podvzorčenje slik in operator povprečenja
 
-A = plt.imread(os.path.join(os.path.curdir, 'Moire.jpg'))
-plt.figure()
+A = pylab.array(Image.open(Path('./1-Vzorcenje/Moire.jpg')))
+plt.figure().set_size_inches(10, 10)
 plt.imshow(A)
 plt.title('originalna slika')
+plt.axis('off')
 
 pvz = 3  # faktor podvzorčenja
 plt.figure()
 plt.imshow(A[0::pvz, 0::pvz, :])
 plt.title('podvzorčena slika: faktor podvzorčenja {0}'.format(pvz))
 
-# ukazi.m:253
+# ukazi.m:253 -- Note: Mislim, da je ok, čeprav rezultat različen kot v Matlab (poglej spodaj).
 # operator povprečenja (verzija 1)
-# Mislim, da ne dela kot bi moralo. Could probably benefit from refactoring.
+# Zglajena slika v Matlabu ima pri meni moder odtenek. Nisem prepričan, če tako mora biti (tukaj odtenka ni).
 D = 3  # premer lokalne okolice piksla, na kateri se izračuna povprečna vrednost
 B = np.ndarray((A.shape[0] - D + 1, A.shape[1] - D + 1, D))
 for r in np.arange(0, A.shape[0] - D).reshape(-1):
@@ -404,7 +405,7 @@ plt.figure()
 plt.imshow(np.uint8(B))
 plt.title('zglajena slika')
 
-# ukazi.m:270
+# ukazi.m:270 -- Note: Naslovi se prekrivajo.
 # operator povpreenja (verzija 2)
 # isti operator povprečenja kot zgoraj, implementiran nekoliko drugače (veliko hitreja izvedba)
 D = 3
