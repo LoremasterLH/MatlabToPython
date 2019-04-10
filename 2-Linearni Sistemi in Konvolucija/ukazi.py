@@ -4,7 +4,7 @@
 
 # 2-Linearni Sistemi in Konvolucija
 import numpy as np
-import scipy.signal
+from scipy.signal import convolve2d as conv2
 from matplotlib import cm  # color mapping
 import pylab as pylab
 import matplotlib.pyplot as plt
@@ -14,6 +14,13 @@ from PIL import Image
 from mpl_toolkits.mplot3d import axes3d
 from mpl_toolkits.mplot3d import art3d
 from os import system, name
+
+# Potrebni za del z zvokom
+import sounddevice as sd
+# from scikits.audiolab import wavread Knjižnica še ni prevedena v Python 3
+from scipy.io import wavfile
+import os
+import time
 
 # --------------------------------------------------------------------
 # LINEARNI SISTEMI IN KONVOLUCIJA
@@ -78,7 +85,7 @@ x = [1] + np.zeros(25).tolist() + [2] + np.zeros(25).tolist() + [1] + np.zeros(2
 h = np.arange(0, 1.1, 0.1).tolist() + np.arange(1, -0.025, - 0.025).tolist()
 
 # ukazi.m:68
-f, ax = plt.subplots(2)
+fig, ax = plt.subplots(2)
 # subplot(2,1,1)
 ax[0].plot(x, 'b', lineWidth=2)
 ax[0].set_xlabel('vzorci')
@@ -109,7 +116,7 @@ plt.close()
 
 ######################
 # ukazi.m:91 -- Note: Prevejeno z Matlab
-f, ax = plt.subplots(3)
+fig, ax = plt.subplots(3)
 
 ax[0].plot(x, lineWidth=2)
 ax[0].set_title('x')
@@ -138,15 +145,15 @@ h = np.arange(0, 1.1, 0.1).tolist() + np.arange(1, -0.025, -0.025).tolist()
 # h = [-1 1 -1]
 
 plt.figure()
-plt.subplot(2, 1, 1);
+plt.subplot(2, 1, 1)
 plt.plot(x, 'b', lineWidth=2)
-plt.xlabel('vzorci');
-plt.ylabel('amplituda');
+plt.xlabel('vzorci')
+plt.ylabel('amplituda')
 plt.title('vhod (x)')
-plt.subplot(2, 1, 2);
+plt.subplot(2, 1, 2)
 plt.plot(h, 'g', lineWidth=2)
-plt.xlabel('vzorci');
-plt.ylabel('amplituda');
+plt.xlabel('vzorci')
+plt.ylabel('amplituda')
 plt.title('odziv (h)')
 plt.tight_layout()
 
@@ -167,7 +174,7 @@ for n in range(0, len(x) + len(h) - 1):
 
 ## #########
 # ukazi.m:138 -- Note: Preverjeno z Matlab1
-f, ax = plt.subplots(3)
+fig, ax = plt.subplots(3)
 
 ax[0].plot(x, lineWidth=2)
 ax[0].set_title('x')
@@ -187,14 +194,14 @@ plt.tight_layout()
 
 # --------------------------------------------------------------------
 # Konvoluvcija: preprosti primeri s funkcijo np.convolve()
-# %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# ###########################################
 
 # ukazi.m:156 -- Note: Preverjeno z Matlab
 x = np.zeros(50).tolist() + [1] + np.zeros(50).tolist()
 h = np.arange(0, 1.1, 0.1).tolist() + np.arange(1, -0.025, -0.025).tolist()
 # h = np.ones(22).tolist();
 
-f, ax = plt.subplots(3)
+fig, ax = plt.subplots(3)
 
 ax[0].plot(x, lineWidth=2)
 ax[0].set_title('x')
@@ -218,7 +225,7 @@ x = np.zeros(50).tolist() + [1] + np.zeros(25).tolist() + [1] + np.zeros(50).tol
 h = np.arange(0, 1.1, 0.1).tolist() + np.arange(1, -0.025, -0.025).tolist()
 # h = np.ones(22).tolist();
 
-f, ax = plt.subplots(3)
+fig, ax = plt.subplots(3)
 
 ax[0].plot(x, lineWidth=2)
 ax[0].set_title('x')
@@ -244,7 +251,7 @@ x = np.zeros(50).tolist() + [1] + np.zeros(d).tolist() + [1] + np.zeros(d).tolis
 # h = np.arange(0,1.1,0.1).tolist() + np.arange(1,-0.025,-0.025).tolist()
 h = np.random.random_sample(30).tolist()
 
-f, ax = plt.subplots(3)
+fig, ax = plt.subplots(3)
 # subplot(3,1,1)
 ax[0].plot(x, lineWidth=2)
 ax[0].set_title('x')
@@ -283,7 +290,7 @@ plt.tight_layout()
 x = np.zeros(50).tolist() + [1] + np.zeros(50).tolist()
 h = np.arange(0, 1.1, 0.1).tolist() + np.arange(1, -0.025, -0.025).tolist()
 
-f, ax = plt.subplots(2)
+fig, ax = plt.subplots(2)
 ax[0].plot(np.convolve(x, h).tolist(), 'r', lineWidth=2)
 ax[0].set_title('KOMUTATIVNOST KONVOLUCIJE: conv(x,h)')
 ax[0].set_xlabel('vzorci')
@@ -301,7 +308,7 @@ x = np.zeros(50).tolist() + [1] + np.zeros(50).tolist()
 h = np.arange(0, 1.1, 0.1).tolist() + np.arange(1, -0.025, -0.025).tolist()
 g = np.sin(np.arange(0, np.pi, 0.1)).tolist()
 
-f, ax = plt.subplots(2)
+fig, ax = plt.subplots(2)
 ax[0].plot(np.convolve(g, np.convolve(x, h)).tolist(), 'r', lineWidth=2)
 ax[0].set_title('ASOCIATIVNOST KONVOLUCIJE: conv(g,conv(x,h))')
 ax[0].set_xlabel('vzorci')
@@ -319,7 +326,7 @@ x = np.zeros(50).tolist() + [1] + np.zeros(50).tolist()
 h = np.cos(np.arange(0, np.pi, 0.05)).tolist()
 g = np.sin(np.arange(0, np.pi, 0.05)).tolist()
 
-f, ax = plt.subplots(2)
+fig, ax = plt.subplots(2)
 ax[0].plot(np.convolve(x, (np.add(g, h))).tolist(), 'r', lineWidth=2)
 ax[0].set_title('DISTRIBUTIVNOST KONVOLUCIJE:  conv(x,(g+h))')
 ax[0].set_xlabel('vzorci')
@@ -337,7 +344,7 @@ x = np.concatenate((np.zeros(50), [1], np.zeros(50)))  # Na tak način združimo
 h = np.sin(np.arange(0, np.pi, 0.05))
 a = np.random.randn()
 
-f, ax = plt.subplots(3)
+fig, ax = plt.subplots(3)
 
 ax[0].plot((a * np.convolve(x, h)).tolist(), 'r', lineWidth=2)
 ax[0].set_title('ASOCIATIVNOST S SKALARNIM MNOŽENJEM: a*conv(x,h)')
@@ -358,14 +365,13 @@ plt.tight_layout()
 '--------------------------------------------------------------------' \
 '% Konvoluvcija in govor' \
 '% impulzni odzivi posameznih prostorov: http://www.voxengo.com/impulses/'
-# '%%%%%% posnamemo govor %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# '###### posnamemo govor ###########################################
 import sounddevice as sd
 # from scikits.audiolab import wavread Knjižnica še ni prevedena v Python 3
 from scipy.io import wavfile
 import os
 import time
 
-############################################################################################################################################################################ here
 # ukazi.m:298 -- Note: Preverjeno z Matlab
 print("\n" * 80)  # clc
 plt.close('all')
@@ -375,7 +381,7 @@ posnetek = sd.rec(5 * Fs, Fs, 2, blocking=True)
 sd.play(posnetek, Fs)
 
 # ukazi.m:308
-f, ax = plt.subplots(2)
+fig, ax = plt.subplots(2)
 ax[0].plot(np.arange(0.0, len(posnetek)) / Fs, posnetek[:, 0], lineWidth=0.4)
 ax[0].set_title('kanal 1')
 ax[0].set_xlabel('čas (s)')
@@ -390,13 +396,14 @@ plt.tight_layout()
 # impulzni odzivi posameznih prostorov: http://www.voxengo.com/impulses/
 # ukazi.m:321 -- Note: Preverjeno z Matlab
 # h,Fs,bits=wavread('IMreverbs/Going Home.wav')
-# Če datoteke ne najde, verjetno išče v mapi prej odprte. Najlažje se reši, če zapreš IDE in ponovno odpreš to datoteko.
+# Če datoteke ne najde, verjetno išče v mapi prej odprte. Najlažje se reši, če zapreš IDE in ponovno odpreš to datoteko,
+# ali spremeniš pot.
 Fs, h = wavfile.read('./2-Linearni Sistemi in Konvolucija/IMreverbs/Going Home.wav')
 h = h / np.linalg.norm(h)
 sd.play(50 * h, Fs)
 
 # ukazi.m:325
-f, ax = plt.subplots(2)
+fig, ax = plt.subplots(2)
 ax[0].plot(np.arange(0, len(h)) / Fs, h[:, 0], 'k', lineWidth=0.4)
 ax[0].set_title('kanal 1')
 ax[0].set_xlabel('čas (s)')
@@ -418,7 +425,7 @@ toc = time.time() - tic
 print('Pretekel čas: {0} sekund'.format(toc))
 sd.play(efekt, Fs)
 
-f, ax = plt.subplots(2)
+fig, ax = plt.subplots(2)
 ax[0].plot(np.arange(0, len(efekt)) / Fs, efekt[:, 0], 'r', lineWidth=0.4)
 ax[0].plot(np.arange(0, len(posnetek)) / Fs, posnetek[:, 0], lineWidth=0.4)
 ax[0].set_title('kanal 1')
@@ -448,7 +455,7 @@ efekt[:, 1] = np.fft.ifft(np.multiply(X, Y))
 toc = time.time() - tic
 print('Pretekel čas: {0} sekund'.format(toc))
 
-f, ax = plt.subplots(2)
+fig, ax = plt.subplots(2)
 ax[0].plot(np.arange(0, len(efekt)) / Fs, efekt[:, 0], 'r', lineWidth=0.4)
 ax[0].plot(np.arange(0, len(posnetek)) / Fs, posnetek[:, 0], lineWidth=0.4)
 ax[0].set_title('kanal 1')
@@ -469,14 +476,17 @@ sd.play(efekt, Fs)
 Fs, h = wavfile.read('./2-Linearni Sistemi in Konvolucija/IMreverbs/Five columns.wav')
 h = h / np.linalg.norm(h)
 
+# ukazi.m:391
 # ##### posnamemo govor ###########################################
 # 30 sekund
 posnetek = sd.rec(30 * Fs, Fs, 2, blocking=True)
 sd.play(posnetek, Fs)
+
+# ukazi.m:397
 # ############## konvolucija v časovni domeni #######################
 tic = time.time()
-# Lahko traja nekaj minut.
-efekt = np.empty([posnetek.size, 2])  # Initialise new np array as python does not do this automatically to fit data.
+# Lahko traja nekaj minut. Cca 5 min pri meni.
+efekt = np.empty([X.size, 2])  # Initialise new np array as python does not do this automatically to fit data.
 efekt[:, 0] = np.convolve(posnetek[:, 0], h[:, 0])
 efekt[:, 1] = np.convolve(posnetek[:, 1], h[:, 1])
 toc = time.time() - tic
@@ -484,66 +494,56 @@ print('Pretekel čas: {0} sekund'.format(toc))
 
 sd.play(efekt, Fs)
 
-# ukazi.m:405
-############### konvolucija v frekvenni domeni #######################
+# ukazi.m:405 -- Note: Rezultat je pričakovan, vendar ni preverjeno, ker v Matlabu ni delalo.
+# ############## konvolucija v frekvenni domeni #######################
 tic = time.time()
 X = np.fft.fft(np.concatenate((posnetek[:, 0], np.zeros(len(h[:, 0]) - 1))))
 Y = np.fft.fft(np.concatenate((h[:, 0], np.zeros(len(posnetek[:, 0]) - 1))))
-posnetek = np.empty([X.size, 2])  # Initialise new np array as python does not do this automatically to fit data.
-posnetek[:, 0] = np.fft.ifft(np.multiply(X, Y))
+efekt = np.empty([X.size, 2])  # Initialise new np array as python does not do this automatically to fit data.
+efekt[:, 0] = np.fft.ifft(np.multiply(X, Y))
 toc = time.time() - tic
 print('Pretekel čas: {0} sekund'.format(toc))
 tic = time.time()
 X = np.fft.fft(np.concatenate((posnetek[:, 1], np.zeros(len(h[:, 1]) - 1))))
 Y = np.fft.fft(np.concatenate((h[:, 1], np.zeros(len(posnetek[:, 1]) - 1))))
-# posnetek = np.empty([X.size, 2])  # Initialise new np array as python does not do this automatically to fit data.
-posnetek[:, 1] = np.fft.ifft(np.multiply(X, Y))
+efekt[:, 1] = np.fft.ifft(np.multiply(X, Y))
 toc = time.time() - tic
 print('Pretekel čas: {0} sekund'.format(toc))
-sd.play(posnetek, Fs)
 
-'--------------------------------------------------------------------\n% Konvoluvcija in 3D zvok\n% impulzni odzivi posameznih pozicij v prostoru: http://recherche.ircam.fr/equipes/salles/listen/download.html \n%%%%%% posnamemo govor %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\n'
+sd.play(efekt, Fs)
 
+# ukazi.m:420
+# --------------------------------------------------------------------
+# Konvoluvcija in 3D zvok
+# impulzni odzivi posameznih pozicij v prostoru: http://recherche.ircam.fr/equipes/salles/listen/download.html
+# ###### posnamemo govor ###########################################
+
+# ukazi.m:425
+print("\n" * 80)  # clc
 plt.close('all')
 Fs = 44100
-# ukazi.m:383
-bits = 16
-# ukazi.m:384
-# my_recorder=audiorecorder(Fs,bits,2)
-# ukazi.m:385
-# recordblocking(my_recorder,5)
-# posnetek=getaudiodata(my_recorder)
-posnetek = sd.rec(5 * Fs, Fs, 2)  # dtype = 'int16'
-# ukazi.m:387
+posnetek = sd.rec(5 * Fs, Fs, 2, blocking=True)  # Za spremembo bitne ločljivosti nastavimo dtype (privzeto 16 bitna)
 sd.play(posnetek, Fs)
-plt.figure()
-plt.subplot(2, 1, 1)
-plt.plot((np.arange(1, len(posnetek))) / Fs, posnetek[:, 1])
-plt.axis('tight')
-plt.title('kanal 1')
-plt.xlabel('as (s)')
-plt.ylabel('amplituda')
-plt.subplot(2, 1, 2)
-plt.plot((np.arange(1, len(posnetek))) / Fs, posnetek[:, 2])
-plt.axis('tight')
-plt.title('kanal 2')
-plt.xlabel('as (s)')
-plt.ylabel('amplituda')
 
-f, ax = plt.subplots(2)
-ax[0].plot(np.arange(0, len(posnetek)) / Fs, posnetek[:, 0])
+# ukazi.m:434
+fig, ax = plt.subplots(2)
+ax[0].plot(np.arange(0, len(posnetek[:, 0])) / Fs, posnetek[:, 0], LineWidth=0.4)
 ax[0].set_title('kanal 1')
 ax[0].set_xlabel('čas (s)')
 ax[0].set_ylabel('amplituda')
-ax[1].plot(np.arange(0, len(posnetek)) / Fs, posnetek[:, 1])
+
+ax[1].plot(np.arange(0, len(posnetek[:, 1])) / Fs, posnetek[:, 1], LineWidth=0.4)
 ax[1].set_title('kanal 2')
 ax[1].set_xlabel('čas (s)')
 ax[1].set_ylabel('amplituda')
 plt.tight_layout()
-############# naloimo impulzni odziv 3D zvoka (dostopen na spletu) ########################
+
+# ukazi.m:444
+# ############ naložimo impulzni odziv 3D zvoka (dostopen na spletu) ########################
 # impulzni odzivi posameznih prostorov: http://recherche.ircam.fr/equipes/salles/listen/download.html
 
-# Not sure what to do here.
+# ukazi.m:447 -- Note: Not yet implemented due to having to read an unfamiliar file-type, continues at line 594
+
 load('.\\3Dsd.play\\IRC_1059_C_HRIR.mat')
 elevation = 50
 azimuth = 270
@@ -565,10 +565,12 @@ plt.axis('tight')
 plt.title('desni kanal')
 plt.xlabel('as (ms)')
 plt.ylabel('amplituda')
-############### konvolucija v frekvenčni domeni #######################
-clear('posnetek3D')
 
-# convolveert stereo to mono sd.play
+# ukazi.m:468 -- Note: See m:447
+# ############## konvolucija v frekvenčni domeni #######################
+# convert stereo to mono sound
+posnetekMONO = (posnetek[:, 0] + posnetek[:, 1]) / 2
+
 # left channel
 X = np.fft.fft((posnetekMONO, np.concatenate(np.zeros(len(left_channel_IR) - 1, 1))))
 Y = np.fft.fft((left_channel_IR.T, np.concatenate(np.zeros(len(posnetekMONO) - 1, 1))))
@@ -596,42 +598,64 @@ plt.title('kanal 2')
 plt.xlabel('as (s)')
 plt.ylabel('amplituda')
 sd.play(posnetek3D, Fs)
-'--------------------------------------------------------------------\n% AUDIO EFEKT DISTORTION\n% (C) ROSIS, LSPO, FERI, Univerza v Mariboru, Slovenia \n--------------------------------------------------------------------\n'
-## ################## akustična kitara
-y, Fs, nbits = wavread('SotW.wav', nargout=3)
-# ukazi.m:456
-player = audioplayer(y, Fs)
-# ukazi.m:457
-play(player)
-stop(player)
-'--------------------------------------------------------------------\n%% %%%%%%%%%%%%%%%%%% efekt distortion %%%%%%%%%%%%%%%%%%\n%            y = vhodni signal\n%            Fs = Vzorevalna frekvenca\n'
-A = 20
-# ukazi.m:464
-clear('yf')
+
+# ukazi.m:499
+# --------------------------------------------------------------------
+# AUDIO EFEKT DISTORTION
+# (C) ROSIS, LSPO, FERI, Univerza v Mariboru, Slovenia
+# --------------------------------------------------------------------
+
+# ukazi.m:503
+# ################### akustična kitara
+Fs, y = wavfile.read('./2-Linearni Sistemi in Konvolucija/SotW.wav')
+sd.play(y, Fs)
+
+sd.stop()
+
+# ukazi.m:511
+# --------------------------------------------------------------------
+# #################### efekt distortion ##################
+#            y = vhodni signal
+#            Fs = Vzorčevalna frekvenca
+
+from distortion import distortion   # Import custom function from distortion.py in root folder.
+
+# ukazi.m:516 -- Note: Podatki, ki jih vrne wavfile niso normalizirani, tako da je za isti A rezultat drugačen kot v
+# Matlabu.
+A = 0.0002
 dy = distortion(A, y)
-# ukazi.m:466
-dplayer = audioplayer(dy, Fs)
-# ukazi.m:468
-play(dplayer)
-stop(player)
-'--------------------------------------------------------------------\n% LINEARNI SISTEMI IN KONVOLUCIJA\n% (C) ROSIS, LSPO, FERI, Univerza v Mariboru, Slovenia \n% \n% Poglavje 2: Slike (2D signali)\n--------------------------------------------------------------------\n% SOBELOV OPERATOR\n'
+sd.play(dy)
+
+sd.stop()
+
+# ukazi.m:526
+# --------------------------------------------------------------------
+# LINEARNI SISTEMI IN KONVOLUCIJA
+# (C) ROSIS, LSPO, FERI, Univerza v Mariboru, Slovenia
+#
+# Poglavje 2: Slike (2D signali)
+# --------------------------------------------------------------------
+# SOBELOV OPERATOR
+
+# ukazi.m:534
 plt.close('all')
-A = imread('Valve_original.png')
-# ukazi.m:476
+A = pylab.array(Image.open(Path('./2-Linearni Sistemi in Konvolucija/Valve_original.png')))
 plt.figure()
-image(A)
+plt.axis('off')
+plt.imshow(A)
 plt.title('originalna slika')
-Sobel_x = np.dot((1, 2, 1).T, (+ 1, 0, - 1))
-# ukazi.m:480
-Sobel_y = np.dot((+ 1, 0, - 1).T, (1, 2, 1))
-# ukazi.m:481
-B_x[:, :, 1] = convolve2(double(A[:, :, 1]), Sobel_x)
-# ukazi.m:483
-B_x[:, :, 2] = convolve2(double(A[:, :, 2]), Sobel_x)
-# ukazi.m:484
-B_x[:, :, 3] = convolve2(double(A[:, :, 3]), Sobel_x)
-# ukazi.m:485+
+
+# ukazi.m:539
+Sobel_x = np.outer([1, 2, 1], [+1, 0, -1])
+Sobel_y = np.outer([+1, 0, -1], [1, 2, 1])
+
+B_x = np.empty([len(A)+2, len(A[0, :])+2, 3])   # To match the size of convolution output.
+B_x[:, :, 0] = conv2(A[:, :, 0], Sobel_x)
+B_x[:, :, 1] = conv2(A[:, :, 1], Sobel_x)
+B_x[:, :, 2] = conv2(A[:, :, 2], Sobel_x)
+# here ##################################################################################################
 B_x = uint8(B_x)
+
 # ukazi.m:486
 # B_x = uint8( (B_x - min(B_x(:))) / (max(B_x(:)) - min(B_x(:))) *255 );
 plt.figure()
