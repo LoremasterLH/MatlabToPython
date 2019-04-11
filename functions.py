@@ -1,5 +1,7 @@
-from numpy import dot, clip, empty
+from numpy import clip, empty
 # from scipy.io import wavfile
+from matplotlib.colors import Normalize
+from matplotlib import cm
 
 # multiplier = 20
 # Fs, sound_data = wavfile.read('./2-Linearni Sistemi in Konvolucija/SotW.wav')
