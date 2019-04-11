@@ -1,18 +1,18 @@
 Prevod prve polovice vaj pri predmetu ROSIS iz Matlab v Python 3.
 
-Podpora za Python 2 se je nehala z 1.1.2018, tako da menim, da je bolje uporabiti Python 3.
-
 Uporabljen IDE: PyCharm
 Verzija Python:	3.6.1
-Knjiûnice:		matplotlib
+Knji≈ænice:		matplotlib
 				numpy
-				os
+        pathlib
+				Pillow (not PIL, as that is older unsupported version, Pillow is reffered to as PIL for the sake of imports)
+				pylab
 				scipy
 				sounddevice
 				time
 
-1-VzorËenje							Prevedeno
-2-Liearni Sistemi in Konvolucija	Prevedeno do (oznaËeno)
+1-Vzorƒçenje							Prevedeno
+2-Linearni Sistemi in Konvolucija	Prevedeno
 3-Fourirjeva Analiza				Delno prevedeno
 4-Lastnosti Fourirjeve Analize		Work in progress
 5-Filtri							Work in progress
