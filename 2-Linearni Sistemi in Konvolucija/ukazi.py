@@ -5,21 +5,15 @@
 # 2-Linearni Sistemi in Konvolucija
 import numpy as np
 from scipy.signal import convolve2d as conv2
-from matplotlib import cm  # color mapping
+from scipy.signal.windows import gaussian as gausswin
 import pylab as pylab
 import matplotlib.pyplot as plt
-import sounddevice as sd
 from pathlib import Path
 from PIL import Image
-from mpl_toolkits.mplot3d import axes3d
-from mpl_toolkits.mplot3d import art3d
-from os import system, name
 
 # Potrebni za del z zvokom
 import sounddevice as sd
-# from scikits.audiolab import wavread Knjižnica še ni prevedena v Python 3
 from scipy.io import wavfile
-import os
 import time
 
 # --------------------------------------------------------------------
@@ -54,6 +48,7 @@ import time
 # zaradi h(n-k) mora biti n-k med 1 in len(h), torej mora biti k med n-len(h) in n-1, ampak samo za pozitivne n-k!
 # zaradi x(k+1) mora teči k med 0 in len(x)-1
 
+# ukazi.m:33 -- Note: Preverjeno z Matlab
 print("\n" * 80)  # clc - Python nima funkcionalnosti, ki bi konsistentno počistila konzolo. Lahko izbrišeš.
 
 x = (1, 2, 3, 4, 3, 2, 1)
@@ -74,28 +69,29 @@ red, = plt.plot(y2, 'r:', linewidth=2, label='conv')
 plt.xlabel('vzorci')
 plt.ylabel('amplituda')
 plt.legend([blue, red], [blue.get_label(), red.get_label()])
-'--------------------------------------------------------------------\n% Konvoluvcija: preprosti primeri s for zanko \n'
-###########################################
 
+# ukazi.m:59
+# --------------------------------------------------------------------
+# Konvoluvcija: preprosti primeri s for zanko
+# ##########################################
+
+# ukazi.m:63 -- Note: Preverjeno z Matlab
 print("\n" * 80)  # clc
 plt.close('all')
-
-# ukazi.m:65 -- Note: Prevejeno z Matlab
 x = [1] + np.zeros(25).tolist() + [2] + np.zeros(25).tolist() + [1] + np.zeros(25).tolist()
 h = np.arange(0, 1.1, 0.1).tolist() + np.arange(1, -0.025, - 0.025).tolist()
 
 # ukazi.m:68
 fig, ax = plt.subplots(2)
-# subplot(2,1,1)
 ax[0].plot(x, 'b', lineWidth=2)
 ax[0].set_xlabel('vzorci')
 ax[0].set_ylabel('amplituda')
-ax[0].set_title('vhod (x)')
-# subplot(2,1,2)
+ax[0].set_title('Vhod (x)')
+
 ax[1].plot(h, 'g', lineWidth=2)
 ax[1].set_xlabel('vzorci')
 ax[1].set_ylabel('amplituda')
-ax[1].set_title('odziv (h)')
+ax[1].set_title('Odziv (h)')
 plt.tight_layout()
 
 # ukazi.m:74
@@ -110,32 +106,32 @@ for n in range(0, len(x) + len(h) - 1):
     plt.plot(y, 'r', lineWidth=2)
     plt.xlabel('vzorci')
     plt.ylabel('amplituda')
-    plt.title('vhod (x) - modro, odziv (h) - zeleno, izhod (y) - rdeče')
+    plt.title('Vhod (x) - modro, odziv (h) - zeleno, izhod (y) - rdeče')
     plt.pause(0.01)
 plt.close()
 
+# ukazi.m:90 -- Note: Preverjeno z Matlab
 ######################
-# ukazi.m:91 -- Note: Prevejeno z Matlab
 fig, ax = plt.subplots(3)
 
 ax[0].plot(x, lineWidth=2)
-ax[0].set_title('x')
 ax[0].set_xlabel('vzorci')
 ax[0].set_ylabel('amplituda')
+ax[0].set_title('x')
 
 ax[1].plot(h, 'g', lineWidth=2)
-ax[1].set_title('h')
 ax[1].set_xlabel('vzorci')
 ax[1].set_ylabel('amplituda')
+ax[1].set_title('h')
 
 ax[2].plot(y, 'r', lineWidth=2)
-ax[2].set_title('y')
 ax[2].set_xlabel('vzorci')
 ax[2].set_ylabel('amplituda')
+ax[2].set_title('y')
 plt.tight_layout()
 
+# ukazi.m:106 -- Note: Preverjeno z Matlab
 ###########################################
-# ukazi.m:107
 d = 1  # razmik impulzov v x
 x = np.zeros(100)
 x[0:100:d] = 1
@@ -144,18 +140,19 @@ h = np.arange(0, 1.1, 0.1).tolist() + np.arange(1, -0.025, -0.025).tolist()
 # x = [ 0 0 0 0 0 1 0 0 0 0 0 0 2 0 0 0 0 0 3]
 # h = [-1 1 -1]
 
-plt.figure()
-plt.subplot(2, 1, 1)
-plt.plot(x, 'b', lineWidth=2)
-plt.xlabel('vzorci')
-plt.ylabel('amplituda')
-plt.title('vhod (x)')
-plt.subplot(2, 1, 2)
-plt.plot(h, 'g', lineWidth=2)
-plt.xlabel('vzorci')
-plt.ylabel('amplituda')
-plt.title('odziv (h)')
+fig, ax = plt.subplots(2)
+
+ax[0].plot(x, 'b', lineWidth=2)
+ax[0].set_xlabel('vzorci')
+ax[0].set_ylabel('amplituda')
+ax[0].set_title('Vhod (x)')
+
+ax[1].plot(h, 'g', lineWidth=2)
+ax[1].set_xlabel('vzorci')
+ax[1].set_ylabel('amplituda')
+ax[1].set_title('Odziv (h)')
 plt.tight_layout()
+
 
 # ukazi.m:122
 plt.figure()
@@ -173,7 +170,7 @@ for n in range(0, len(x) + len(h) - 1):
     plt.pause(0.01)
 
 ## #########
-# ukazi.m:138 -- Note: Preverjeno z Matlab1
+# ukazi.m:138 -- Note: Preverjeno z Matlab
 fig, ax = plt.subplots(3)
 
 ax[0].plot(x, lineWidth=2)
@@ -192,6 +189,7 @@ ax[2].set_xlabel('vzorci')
 ax[2].set_ylabel('amplituda')
 plt.tight_layout()
 
+# ukazi.m:152
 # --------------------------------------------------------------------
 # Konvoluvcija: preprosti primeri s funkcijo np.convolve()
 # ###########################################
@@ -219,8 +217,8 @@ ax[2].set_xlabel('vzorci')
 ax[2].set_ylabel('amplituda')
 plt.tight_layout()
 
+# ukazi.m:175 -- Note: Preverjeno z Matlab
 ###########################################
-# ukazi.m:176 -- Note: Preverjeno z Matlab
 x = np.zeros(50).tolist() + [1] + np.zeros(25).tolist() + [1] + np.zeros(50).tolist()
 h = np.arange(0, 1.1, 0.1).tolist() + np.arange(1, -0.025, -0.025).tolist()
 # h = np.ones(22).tolist();
@@ -243,9 +241,9 @@ ax[2].set_xlabel('vzorci')
 ax[2].set_ylabel('amplituda')
 plt.tight_layout()
 
+# ukazi.m:195 -- Note: Preverjeno z Matlab
 ###########################################
 # Bolj kompleksen primer....
-# ukazi.m:197 -- Note: Preverjeno z Matlab
 d = 20  # razmik impulzov v x
 x = np.zeros(50).tolist() + [1] + np.zeros(d).tolist() + [1] + np.zeros(d).tolist() + [1] + np.zeros(50).tolist()
 # h = np.arange(0,1.1,0.1).tolist() + np.arange(1,-0.025,-0.025).tolist()
@@ -269,7 +267,8 @@ ax[2].set_xlabel('vzorci')
 ax[2].set_ylabel('amplituda')
 plt.tight_layout()
 
-'--------------------------------------------------------------------'
+# ukazi.m:216
+# --------------------------------------------------------------------
 # ALGEBRAIČNE LASTNOSTI KONVOLUCIJE
 # KOMUTATIVNOST
 #     f * g = g * f ,
@@ -301,9 +300,9 @@ ax[1].set_xlabel('vzorci')
 ax[1].set_ylabel('amplituda')
 plt.tight_layout()
 
+# ukazi.m:247 -- Note: Preverjeno z Matlab
 # ASOCIATIVNOST ###########################################
 #     g * (x * h) = (g * x) * h ,
-# ukazi.m:247 -- Note: Preverjeno z Matlab
 x = np.zeros(50).tolist() + [1] + np.zeros(50).tolist()
 h = np.arange(0, 1.1, 0.1).tolist() + np.arange(1, -0.025, -0.025).tolist()
 g = np.sin(np.arange(0, np.pi, 0.1)).tolist()
@@ -319,9 +318,9 @@ ax[1].set_xlabel('vzorci')
 ax[1].set_ylabel('amplituda')
 plt.tight_layout()
 
+# ukazi.m:260 -- Note: Preverjeno z Matlab
 # DISTRIBUTIVNOST ###########################################
 #     x * (g + h) = (x * g) + (x * h) ,
-# ukazi.m:262
 x = np.zeros(50).tolist() + [1] + np.zeros(50).tolist()
 h = np.cos(np.arange(0, np.pi, 0.05)).tolist()
 g = np.sin(np.arange(0, np.pi, 0.05)).tolist()
@@ -337,9 +336,9 @@ ax[1].set_xlabel('vzorci')
 ax[1].set_ylabel('amplituda')
 plt.tight_layout()
 
+# ukazi.m:275 -- Note: Preverjeno z Matlab
 # ASOCIATIVNOST S SKALARNIM MNOŽENJEM ###########################################
 #     a (x * h) = (a x) * h = x * (a h) ,
-# ukazi.m:277 -- Note: Preverjeno z Matlab
 x = np.concatenate((np.zeros(50), [1], np.zeros(50)))  # Na tak način združimo polja numpyarray
 h = np.sin(np.arange(0, np.pi, 0.05))
 a = np.random.randn()
@@ -362,15 +361,11 @@ ax[2].set_xlabel('vzorci')
 ax[2].set_ylabel('amplituda')
 plt.tight_layout()
 
-'--------------------------------------------------------------------' \
-'% Konvoluvcija in govor' \
-'% impulzni odzivi posameznih prostorov: http://www.voxengo.com/impulses/'
-# '###### posnamemo govor ###########################################
-import sounddevice as sd
-# from scikits.audiolab import wavread Knjižnica še ni prevedena v Python 3
-from scipy.io import wavfile
-import os
-import time
+# ukazi.m:294
+# --------------------------------------------------------------------
+# Konvoluvcija in govor
+# impulzni odzivi posameznih prostorov: http://www.voxengo.com/impulses
+# ###### posnamemo govor ###########################################
 
 # ukazi.m:298 -- Note: Preverjeno z Matlab
 print("\n" * 80)  # clc
@@ -392,9 +387,9 @@ ax[1].set_xlabel('čas (s)')
 ax[1].set_ylabel('amplituda')
 plt.tight_layout()
 
+# ukazi.m:318 -- Note: Preverjeno z Matlab
 # ############ naložimo impulzni odziv sobe (dostopen na spletu) ########################
 # impulzni odzivi posameznih prostorov: http://www.voxengo.com/impulses/
-# ukazi.m:321 -- Note: Preverjeno z Matlab
 # h,Fs,bits=wavread('IMreverbs/Going Home.wav')
 # Če datoteke ne najde, verjetno išče v mapi prej odprte. Najlažje se reši, če zapreš IDE in ponovno odpreš to datoteko,
 # ali spremeniš pot.
@@ -414,8 +409,8 @@ ax[1].set_xlabel('čas (s)')
 ax[1].set_ylabel('amplituda')
 plt.tight_layout()
 
+# ukazi.m:336 -- Note: Preverjeno z Matlab
 # ############ konvolucija v časovni domeni ########################
-# ukazi.m:337 -- Note: Preverjeno z Matlab
 efekt = np.ndarray(shape=(len(posnetek) + len(h) - 1, 2))
 tic = time.time()
 # Proces je počasen, tako da ne skrbet, da traja predolgo. Cca 2 min pri meni.
@@ -438,8 +433,8 @@ ax[1].set_xlabel('čas (s)')
 ax[1].set_ylabel('amplituda')
 plt.tight_layout()
 
+# ukazi.m:356 -- Note: Preverjeno z Matlab
 # ############## konvolucija v frekvenčni domeni #######################
-# ukazi.m:359 -- Note: Preverjeno z Matlab
 tic = time.time()
 X = np.fft.fft(np.concatenate((posnetek[:, 0], np.zeros(len(h[:, 0]) - 1))))
 Y = np.fft.fft(np.concatenate((h[:, 0], np.zeros(len(posnetek[:, 0]) - 1))))
@@ -470,19 +465,19 @@ plt.tight_layout()
 
 sd.play(efekt, Fs)
 
-'--------------------------------------------------------------------' \
-'% kako pa je s konvolucijo v časovnem prostoru, če so signali dolgi'
-# ukazi.m:388 -- Note: Preverjeno z Matlab
+# ukazi.m:385
+# --------------------------------------------------------------------
+# kako pa je s konvolucijo v časovnem prostoru, če so signali dolgi
 Fs, h = wavfile.read('./2-Linearni Sistemi in Konvolucija/IMreverbs/Five columns.wav')
 h = h / np.linalg.norm(h)
 
-# ukazi.m:391
+# ukazi.m:391 -- Note: Preverjeno z Matlab
 # ##### posnamemo govor ###########################################
 # 30 sekund
 posnetek = sd.rec(30 * Fs, Fs, 2, blocking=True)
 sd.play(posnetek, Fs)
 
-# ukazi.m:397
+# ukazi.m:397 -- Note: Preverjeno z Matlab
 # ############## konvolucija v časovni domeni #######################
 tic = time.time()
 # Lahko traja nekaj minut. Cca 5 min pri meni.
@@ -518,7 +513,7 @@ sd.play(efekt, Fs)
 # impulzni odzivi posameznih pozicij v prostoru: http://recherche.ircam.fr/equipes/salles/listen/download.html
 # ###### posnamemo govor ###########################################
 
-# ukazi.m:425
+# ukazi.m:425 -- Note: Preverjeno z Matlab
 print("\n" * 80)  # clc
 plt.close('all')
 Fs = 44100
@@ -538,11 +533,9 @@ ax[1].set_xlabel('čas (s)')
 ax[1].set_ylabel('amplituda')
 plt.tight_layout()
 
-# ukazi.m:444
+# ukazi.m:444 -- Note: Not yet implemented due to having to read an unfamiliar file-type, continues at line 594
 # ############ naložimo impulzni odziv 3D zvoka (dostopen na spletu) ########################
 # impulzni odzivi posameznih prostorov: http://recherche.ircam.fr/equipes/salles/listen/download.html
-
-# ukazi.m:447 -- Note: Not yet implemented due to having to read an unfamiliar file-type, continues at line 594
 
 load('.\\3Dsd.play\\IRC_1059_C_HRIR.mat')
 elevation = 50
@@ -605,23 +598,23 @@ sd.play(posnetek3D, Fs)
 # (C) ROSIS, LSPO, FERI, Univerza v Mariboru, Slovenia
 # --------------------------------------------------------------------
 
-# ukazi.m:503
+# ukazi.m:503 -- Preverjeno z Matlab
 # ################### akustična kitara
 Fs, y = wavfile.read('./2-Linearni Sistemi in Konvolucija/SotW.wav')
 sd.play(y, Fs)
 
 sd.stop()
 
-# ukazi.m:511
+# ukazi.m:511 -- Preverjeno z Matlab
 # --------------------------------------------------------------------
 # #################### efekt distortion ##################
 #            y = vhodni signal
 #            Fs = Vzorčevalna frekvenca
 
-from distortion import distortion   # Import custom function from distortion.py in root folder.
+# ukazi.m:516 -- Note: Podatki, ki jih vrne wavfile niso normalizirani, medtem ko podatki, ki jih vrne Matlabov
+# Audioread so, tako da je za enak A rezultat drugačen.
+from functions import distortion   # Import custom function from functions.py in root folder.
 
-# ukazi.m:516 -- Note: Podatki, ki jih vrne wavfile niso normalizirani, tako da je za isti A rezultat drugačen kot v
-# Matlabu.
 A = 0.0002
 dy = distortion(A, y)
 sd.play(dy)
@@ -637,7 +630,7 @@ sd.stop()
 # --------------------------------------------------------------------
 # SOBELOV OPERATOR
 
-# ukazi.m:534
+# ukazi.m:534 -- Note: Nejasnost v vrstici ~653
 plt.close('all')
 A = pylab.array(Image.open(Path('./2-Linearni Sistemi in Konvolucija/Valve_original.png')))
 plt.figure()
@@ -653,117 +646,156 @@ B_x = np.empty([len(A)+2, len(A[0, :])+2, 3])   # To match the size of convoluti
 B_x[:, :, 0] = conv2(A[:, :, 0], Sobel_x)
 B_x[:, :, 1] = conv2(A[:, :, 1], Sobel_x)
 B_x[:, :, 2] = conv2(A[:, :, 2], Sobel_x)
-# here ##################################################################################################
-B_x = uint8(B_x)
 
-# ukazi.m:486
+# Če porežemo vrednosti...
+B_x = np.clip(B_x, 0, 255)
+
 # B_x = uint8( (B_x - min(B_x(:))) / (max(B_x(:)) - min(B_x(:))) *255 );
+# Verjetno ne razumem namena zgornje formule v Matlabu; meni vse vrednosti zaokroži na 0 in 255, je to željeno
+# delovanje ali napaka pri zaokroževanju?
+# Če skaliramo v razpon 0-255...
+# B_x = (B_x - np.min(B_x)) / (np.max(B_x) - np.min(B_x)) * 255
+
+B_x = B_x.astype(np.uint8)
+
 plt.figure()
-image(B_x)
+plt.axis('off')
+plt.imshow(B_x)
 plt.title('Sobelov operator v x smeri')
-B_y[:, :, 1] = convolve2(double(A[:, :, 1]), Sobel_y)
-# ukazi.m:491
-B_y[:, :, 2] = convolve2(double(A[:, :, 2]), Sobel_y)
-# ukazi.m:492
-B_y[:, :, 3] = convolve2(double(A[:, :, 3]), Sobel_y)
-# ukazi.m:493
-B_y = uint8(B_y)
-# ukazi.m:494
-# B_y = uint8( (B_y - min(B_y(:))) / (max(B_y(:)) - min(B_y(:))) *255 );
-plt.figure()
-image(B_y)
-plt.title('Sobelov operator v y smeri')
-'--------------------------------------------------------------------\n% SOBELOV OPERATOR - drugi\n'
-plt.close('all')
-C = imread('Bikesgray.jpg')
-# ukazi.m:502
-plt.figure()
-imagesc(C, (0, 255))
-colormap(gray)
-plt.title('Originalna slika')
-Sobel_x = np.dot((1, 2, 1).T, (+ 1, 0, - 1))
-# ukazi.m:506
-Sobel_y = np.dot((+ 1, 0, - 1).T, (1, 2, 1))
-# ukazi.m:507
-D_x = convolve2(double(C), Sobel_x)
-# ukazi.m:509
-# D_x = uint8(D_x);
-plt.figure()
-imagesc(D_x)
-colormap(gray)
-plt.title('Sobelov operator v x smeri')
-D_y = convolve2(double(C), Sobel_y)
-# ukazi.m:515
-# D_y = uint8(D_y);
-plt.figure()
-imagesc(D_y)
-colormap(gray)
-plt.title('Sobelov operator v y smeri')
-plt.figure()
-imagesc(sqrt(double(D_x ** 2 + D_y ** 2)))
-colormap(gray)
-plt.title('zdruen Sobelov operator v x in y smeri')
-W_xy = sqrt(double(D_x ** 2 + D_y ** 2))
-# ukazi.m:523
-W_xy = uint8(abs(255 - W_xy))
-# ukazi.m:524
-W_xy[W_xy > 140] = 255
-# ukazi.m:525
-plt.figure()
-imagesc(W_xy)
-colormap(gray)
-plt.title('zdruen Sobelov operator v x in y smeri')
-'--------------------------------------------------------------------\n% Laplacov operator\n'
-plt.close('all')
-C = imread('Bikesgray.jpg')
-# ukazi.m:531
-plt.figure()
-imagesc(C, (0, 255))
-colormap(gray)
-Laplace = np.ndarray(([0, - 1, 0], [- 1, 4, - 1], [0, - 1, 0]))
-# ukazi.m:534
-D_x = convolve2(double(C), Laplace)
-# ukazi.m:536
-plt.figure()
-imagesc(D_x)
-colormap(gray)
-'--------------------------------------------------------------------\n% Glajenje slike - Gaussov operator\n'
-plt.close('all')
-C = imread('Bikesgray.jpg')
-# ukazi.m:541
-plt.figure()
-imagesc(C, (0, 255))
-colormap(gray)
-plt.title('originalna slika')
-# sliko zgladimo z Gausovim operatorjem velikosti 5x5
-Gauss = np.dot(1 / 159, ([2, 4, 5, 4, 2], [4, 9, 12, 9, 4], [5, 12, 15, 12, 5], [4, 9, 12, 9, 4], [2, 4, 5, 4, 2]))
-# ukazi.m:546
-plt.figure()
-surf(Gauss)
-plt.axis('tight')
-plt.title('2D Gaussova funkcija')
-D_x = convolve2(double(C), Gauss)
+
 # ukazi.m:550
+B_y = np.empty([len(A)+2, len(A[0, :])+2, 3])   # To match the size of convolution output.
+B_y[:, :, 0] = conv2(A[:, :, 0], Sobel_y)
+B_y[:, :, 1] = conv2(A[:, :, 1], Sobel_y)
+B_y[:, :, 2] = conv2(A[:, :, 2], Sobel_y)
+
+# Če porežemo vrednosti...
+B_y = np.clip(B_y, 0, 255)
+# Če skaliramo v razpon 0-255...
+# B_y = (B_y - np.min(B_y)) / (np.max(B_y) - np.min(B_y)) * 255
+
+B_y = B_y.astype(np.uint8)
+
 plt.figure()
-imagesc(D_x)
-colormap(gray)
-plt.title('zglajena slika: Gauss 5x5')
-####### Poljubna velikost Gaussovega operatorja NxN
-N = 25
-# ukazi.m:555
-w = gausswin(N)
-# ukazi.m:556
-Gauss = np.dot(w, w.T)
-# ukazi.m:557
-Gauss = Gauss / sum(ravel(w))
-# ukazi.m:557
+plt.axis('off')
+plt.imshow(B_y)
+plt.title('Sobelov operator v y smeri')
+
+# ukazi.m:559
+# --------------------------------------------------------------------
+# SOBELOV OPERATOR - drugi???
+
+# ukazi.m:562 -- Note: Preverjeno z Matlab
+plt.close('all')
+C = pylab.array(Image.open(Path('./2-Linearni Sistemi in Konvolucija/Bikesgray.jpg')))
 plt.figure()
-surf(Gauss)
-plt.axis('tight')
+plt.axis('off')
+plt.imshow(C, cmap='gray')
+plt.title('Originalna slika')
+
+Sobel_x = np.outer([1, 2, 1], [+1, 0, -1])
+Sobel_y = np.outer([+1, 0, -1], [1, 2, 1])
+
+# ukazi.m:570
+D_x = conv2(C, Sobel_x)
+plt.figure()
+plt.axis('off')
+plt.imshow(D_x, cmap='gray')
+plt.title('Sobelov operator v x smeri')
+
+D_y = conv2(C, Sobel_y)
+plt.figure()
+plt.axis('off')
+plt.imshow(D_y, cmap='gray')
+plt.title('Sobelov operator v y smeri')
+
+plt.figure()
+plt.axis('off')
+plt.imshow(np.sqrt(D_x ** 2 + D_y ** 2), cmap='gray')
+plt.title('Združen Sobelov operator v x in y smeri')
+
+# ukazi.m:584
+W_xy = np.sqrt(D_x ** 2 + D_y ** 2)
+W_xy = (abs(255 - W_xy))
+W_xy = W_xy.astype(np.uint8)
+W_xy[W_xy > 140] = 255
+plt.figure()
+plt.axis('off')
+plt.imshow(W_xy, cmap='gray')
+plt.title('Združen Sobelov operator v x in y smeri')
+
+# ukazi.m:590
+# --------------------------------------------------------------------
+# Laplacov operator
+
+# ukazi.m:593 -- Note: Preverjeno z Matlab
+plt.close('all')
+C = pylab.array(Image.open(Path('./2-Linearni Sistemi in Konvolucija/Bikesgray.jpg')))
+plt.figure()
+plt.axis('off')
+plt.imshow(C, cmap='gray')
+
+Laplace = np.array(([0, - 1, 0], [- 1, 4, - 1], [0, - 1, 0]))
+
+D_x = conv2(C, Laplace)
+plt.figure()
+plt.axis('off')
+plt.imshow(D_x, cmap='gray')
+
+# ukazi.m:602
+# --------------------------------------------------------------------
+# Glajenje slike - Gaussov operator
+
+# ukazi.m:605 -- Note: Preverjeno z Matlab
+plt.close('all')
+C = pylab.array(Image.open(Path('./2-Linearni Sistemi in Konvolucija/Bikesgray.jpg')))
+plt.figure()
+plt.axis('off')
+plt.imshow(C, cmap='gray')
+plt.title('Originalna slika')
+
+# sliko zgladimo z Gausovim operatorjem velikosti 5x5
+Gauss = 1 / 159 * np.array(([2, 4, 5, 4, 2], [4, 9, 12, 9, 4], [5, 12, 15, 12, 5], [4, 9, 12, 9, 4], [2, 4, 5, 4, 2]))
+fig = plt.figure()
+X = np.arange(Gauss[:, ].size)  # We have to create X and Y axis to feed the plot.
+Y = np.arange(Gauss[0, :].size)
+X, Y = np.meshgrid(X, Y)
+ax = fig.gca(projection='3d')
+surf = ax.plot_surface(X, Y, Gauss, cmap='Set1')
+ax.view_init(30, -135)          # Rotate it to same point of view as Matlab
 plt.title('2D Gaussova funkcija')
-D_x = convolve2(double(C), Gauss)
-# ukazi.m:561
+plt.tight_layout()
+plt.show()
+
+# ukazi.m:615
+D_x = conv2(C, Gauss)
 plt.figure()
-imagesc(D_x)
-colormap(gray)
-plt.title(('zglajena slika: Gauss ', str(N), 'x', str(N)))
+plt.axis('off')
+plt.imshow(D_x, cmap='gray')
+plt.title('zZglajena slika: Gauss 5x5')
+
+# ukazi.m:619 -- Note: Preverjeno z Matbab
+# ###### Poljubna velikost Gaussovega operatorja NxN
+N = 25
+# Matlab kot drugi parameter sprejme vrednost α, ki se v standardno deviacijo (σ), ki jo potrebuje
+# scipy.signal.windows.gaussian pretvori po naslednji formuli: σ = (L – 1)/(2α), kjer je L dolžina okna.
+w = gausswin(N, (N - 1) / 5)        # Privzeta alpha v matlabu je 2.5
+Gauss = np.outer(w, w)
+Gauss = Gauss / sum(w)
+fig = plt.figure()
+X = np.arange(Gauss[:, 0].size)      # We have to create X and Y axis to feed the plot.
+Y = np.arange(Gauss[0, :].size)
+X, Y = np.meshgrid(X, Y)
+ax = fig.gca(projection='3d')
+surf = ax.plot_surface(X, Y, Gauss, cmap='Set1')
+ax.view_init(30, -135)              # Rotate it to same point of view as Matlab
+plt.title('2D Gaussova funkcija')
+plt.tight_layout()
+plt.show()
+
+# ukazi.m:626
+D_x = conv2(C, Gauss)
+plt.figure()
+plt.imshow(D_x, cmap='gray')
+plt.axis('off')
+plt.title('Zglajena slika: Gauss {0}x{0}'.format(N))
