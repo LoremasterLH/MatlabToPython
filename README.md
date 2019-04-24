@@ -1,24 +1,25 @@
 Prevod prve polovice vaj pri predmetu ROSIS iz Matlab v Python 3.
 
-Uporabljen IDE: PyCharm
-Verzija Python:	3.6.1
-Knjižnice:
+<p>Uporabljen IDE:	PyCharm</p>
+<p>Verzija Python:	3.6.1</p>
+<p>Knjižnice:</p>
 <ul>
-  <li>matplotlib</li>
+	<li>matplotlib</li>
 	<li>numpy</li>
-  <li>pathlib</li>
+	<li>pathlib</li>
 	<li>Pillow (not PIL, as that is older unsupported version, Pillow is reffered to as PIL for the sake of imports)</li>
 	<li>pylab</li>
 	<li>scipy</li>
 	<li>sounddevice</li>
 	<li>time</li>
 	<li>pytftb (from https://github.com/scikit-signal/pytftb)</li>
+</ul>
 
-1-Vzorčenje							Prevedeno
+1-Vzorčenje				Prevedeno
 2-Linearni Sistemi in Konvolucija	Prevedeno
-3-Fourirjeva Analiza				Prevedeno
+3-Fourirjeva Analiza			Prevedeno
 4-Lastnosti Fourirjeve Analize		Delno prevedeno
-5-Filtri							Work in progress
+5-Filtri				Work in progress
 
 ----------------------------------------------------------------------------------------------------
 
