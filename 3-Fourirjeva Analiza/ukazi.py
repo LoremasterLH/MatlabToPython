@@ -1,25 +1,34 @@
+# Author: Martin Konečnik
+# Contact: martin.konecnik@gmail.com
+# Licenced under MIT
+
 # 3-Fourirjeva Analiza
 import numpy as np
-import scipy.signal
-from matplotlib import cm  # color mapping
+from scipy.signal import convolve2d as conv2
+from scipy.signal.windows import gaussian as gausswin
+import pylab as pylab
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-import plotly.plotly as py
-import plotly.graph_objs as go
+from pathlib import Path
 from PIL import Image
 
-'-------------------------------------------------------------\n% skalarni produkt dveh sinusoid\n'
-plt.close('all')
+# Potrebni za del z zvokom
+import sounddevice as sd
+from scipy.io import wavfile
+import time
 
-# ukazi.m:4
-Fvz = 512
-T = 1
-i = np.arange(float(T)*Fvz)/Fvz
-# i = smop.cat(arange(0.0, T * Fvz)) / Fvz
-f1 = 6
-f2 = 5
-s1 = np.sin(np.dot(2 * np.pi * f1, i))
-s2 = np.sin(np.dot(2 * np.pi * f2, i))
+# ukazi.m:1
+# -------------------------------------------------------------
+# Skalarni produkt dveh sinusoid
+
+# ukazi.m:3 -- Note: Preverjeno z Matlab
+plt.close('all')
+Fvz = 512  # frekvenca vzorčenja
+T = 1  # dolžina signala (v sekundah)
+i = np.arange(T * Fvz) / Fvz  # časovni trenutki vzorčenja
+f1 = 6  # frekvenca prve sinusoide (v Hz) - igrajte se z njeno vrednostjo in jo spreminjajte po korakih 0.1 Hz (med 5 Hz in 7 Hz)
+f2 = 5  # frekvenca druge sinusoide (v Hz)
+s1 = np.sin(2 * np.pi * f1 * i)
+s2 = np.sin(2 * np.pi * f2 * i)
 f, ax = plt.subplots(2)
 ax[0].plot(i.tolist(), s1.tolist())
 ax[0].set_title('{0} Hz'.format(f1))
@@ -29,532 +38,429 @@ ax[1].set_xlabel('čas (s)')
 ax[1].set_ylabel('amplituda')
 plt.tight_layout()
 
-skalarni_produkt = np.dot(s1, s2.T)
+skalarni_produkt = np.dot(s1, s2)
 
-'-------------------------------------------------------------\n% skalarni produkt dveh RAZLIcNIH sinusoid pri razlicnih fazah\n'
+# ukazi.m:19 -- Note: Rezultat skalarnega produkta se ne sklada z rezultatom v Matlabom.
+# -------------------------------------------------------------
+# skalarni produkt dveh RAZLIČNIH sinusoid pri razlicnih fazah
+
+# ukazi.m:21
 plt.close('all')
+Fvz = 512  # frekvenca vzorčenja
+T = 1  # dolžina signala (v sekundah)
+i = np.arange(T * Fvz) / Fvz  # časovni trenutki vzorčenja
+f1 = 6  # frekvenca prve sinusoide (v Hz)
+f2 = 5  # frekvenca druge sinusoide (v Hz)
+s1 = np.sin(2 * np.pi * f1 * i)
+skalarni_produkt = np.empty(np.arange(-1, 1.05, 0.05).size)  # Dolžina zanke.
 
-# ukazi.m:22
-Fvz = 512
-T = 1
-i = np.arange(float(T)*Fvz)/Fvz
-f1 = 5
-f2 = 6
-s1 = np.sin(np.dot(2 * pi * f1, i))
-skalarni_produkt = smop.matlabarray([])
+fig, ax = plt.subplots(2)
+fig.tight_layout(rect=[0, 0.03, 1, 0.95])
+ax[0].plot(i, s1)
+ax[0].set_title('{0} Hz'.format(f1))
+for faza in np.arange(-1, 1.05, 0.05):  # fazo povečujemo v koraku 0.05pi, od -pi do +pi
+    s2 = np.sin(2 * np.pi * f2 * i + faza * np.pi)
+    ax[1].clear()
+    ax[1].plot(i, s2, 'r')
+    ax[1].set_title('{0} Hz, faza = {1}*$\pi$'.format(f2, round(faza, 2)))
+    skalarni_produkt[int(faza * 20 + 20)] = np.dot(s1, s2)  # shranjujemo vrednost skalarnega produkta
+    plt.waitforbuttonpress()
+
 plt.figure()
-for faza in arange(- 1, 1.05, 0.05).reshape(-1):
-    s2 = sin(dot(2 * pi * f2, i) + dot(faza, pi))
-    plt.subplot(2, 1, 1)
-    plt.plot(i.tolist(), s1.list())
-    plt.title(smop.cat(str(f1), ' Hz'))
-    plt.subplot(2, 1, 2)
-    plt.plot(i.tolist(), s2.tolist(), 'r')
-    plt.title(smop.cat(str(f2), ' Hz, faza = ', str(faza), '*pi'))
-    plt.pause()
-    skalarni_produkt[skalarni_produkt.shape[0] + 1] = dot(s1, s2.T)
+plt.plot(np.arange(-1, 1.05, 0.05), skalarni_produkt)  # izrišemo vrednost skalarnega produkta pri razlicnih fazah...
+plt.xlabel('faza ($\pi$)')
 
-plt.figure()
-plt.plot(arange(- 1, 1.05, 0.05), skalarni_produkt)
-plt.xlabel('faza (/pi)')
+# ukazi.m:39 -- Note: Preverjeno z Matlab
+# -------------------------------------------------------------
+# skalarni produkt ob frekvenčnem neujemanju - spektralno prepuscanje (Spectral leakage)
+# vec o tem v spodnjih zgledih - razlaga na voljo tudi na: http://www.dsptutor.freeuk.com/analyser/guidance.html#leakage
 
-'-------------------------------------------------------------\n% skalarni produkt ob frekvencnem neujemanju - spektralno prepuscanje (Spectral leakage)\n% vec o tem v spodnjih zgledih - razlaga na voljo tudi na: http://www.dsptutor.freeuk.com/analyser/guidance.html#leakage\n% \n'
-
+# ukazi.m:59
 plt.close('all')
-Fvz = 512
-# ukazi3.m:40
-
-T = 2
-# ukazi3.m:41
-
-i = smop.cat(arange(0.0, T * Fvz)) / Fvz
-# ukazi3.m:42
-
+Fvz = 512  # frekvenca vzorčenja
+T = 2  # dolžina signala (v sekundah)
+i = np.arange(T * Fvz) / Fvz  # časovni trenutki vzorčenja
 f1 = 5
-# ukazi3.m:43
-faza1 = 0
-# ukazi3.m:43
-
+faza1 = 0  # rand
 f2 = 5
-# ukazi3.m:44
-faza2 = 0
-# ukazi3.m:44
+faza2 = 0  # rand
 
-s1 = sin(dot(2 * pi * f1, i) + faza1 * pi)
-# ukazi3.m:45
-skalarni_produkt = smop.matlabarray([])
-# ukazi3.m:46
-for dfrek in arange(- 1, 1, 0.001).reshape(-1):
-    s2 = sin(dot(dot(dot(2, pi), (f2 + dfrek)), i) + faza2 * pi)
-    # ukazi3.m:48
-    skalarni_produkt[skalarni_produkt.shape[0] + 1] = dot(s1, s2.T)  # Ekvivalentno
-# ukazi3.m:49
+s1 = np.sin(2 * np.pi * f1 * i + faza1 * np.pi)
+skalarni_produkt = np.empty(np.arange(- 1, 1.001, 0.001).size)
+for dfrek in np.arange(-1, 1.001, 0.001):  # frekvenčno neujemanje dfrek povecujemo v koraku 0.001 Hz, od -1 Hz do + 1 Hz
+    print(dfrek)
+    s2 = np.sin(2 * np.pi * (f2 + dfrek) * i + faza2 * np.pi)
+    skalarni_produkt[int(dfrek * 1000 + 1000)] = np.dot(s1, s2)
 
 plt.figure()
-plt.plot(arange(- 1, 1, 0.001), skalarni_produkt)
-plt.xlabel('frekvencno neujemanje (Hz)')
+plt.plot(np.arange(-1, 1.001, 0.001), skalarni_produkt)
+plt.xlabel('frekvenčno neujemanje (Hz)')
 
-plt.plot(smop.cat(- 1, 1), smop.cat(0, 0), 'r')
-'-------------------------------------------------------------\n% skalarni produkt dveh sinusoid z ENAKIMA FREKVENCAMA IN RAZLIcNIMA FAZAMA\n'
+plt.plot([- 1, 1], [0, 0], 'r')
+
+# ukazi.m:60 -- Note: Preverjeno z Matlab - drugačna implementacija grafa kot navadno
+# -------------------------------------------------------------
+# skalarni produkt dveh sinusoid z ENAKIMA FREKVENCAMA IN RAZLIČNIMA FAZAMA
+
+# ukazi.m:62
 Fvz = 512
-# ukazi3.m:55
 T = 1
-# ukazi3.m:56
-i = smop.cat(arange(0.0, T * Fvz)) / Fvz
-i.squeeze()
-# ukazi3.m:57
-
+i = np.arange(T * Fvz) / Fvz  # vektor časovnih indeksov
 f1 = 5
-# ukazi3.m:58
 A1 = 1
-# ukazi3.m:58
 f2 = 5
-# ukazi3.m:59
 faza2 = 0
-# ukazi3.m:59
+
 plt.figure()
-for faza1 in arange(- 1, 1, 0.05).reshape(-1):
+for faza1 in np.arange(- 1, 1.05, 0.05):  # fazo povečujemo v koraku 0.05pi, od -pi do +pi
     plt.clf()
 
     # ustvarimo signal
-    x = dot(A1, sin(dot(2 * pi * f1, i) + faza1 * pi))
-    x.squeeze()
-    # ukazi3.m:64
-    s1 = dot(A1, sin(dot(2 * pi * f2, i) + faza2 * pi))
-    s1.squeeze()
-    # ukazi3.m:66
-    Xs1 = dot(s1, x.T)
-    # ukazi3.m:68
+    x = np.dot(A1, np.sin(2 * np.pi * f1 * i + faza1 * np.pi))
+    # ustvarimo sinusoido
+    s1 = np.dot(A1, np.sin(2 * np.pi * f2 * i + faza2 * np.pi))
+    Xs1 = np.dot(s1, x)  # skalarni produkt s sinusoido
 
     plt.subplot(2, 1, 1)
-
-    plt.plot(i.tolist(), x.T.tolist())
-
-    plt.plot(i.tolist(), s1.tolist(), 'r')
-    # plt.hold('off')
-    plt.xlabel('cas (s)')
+    plt.plot(i, x)      # narišemo prvo
+    plt.plot(i, s1, 'r')  # in še drugo sinusoido
+    plt.xlabel('čas (s)')
     plt.ylabel('Amplituda')
-    plt.title(smop.cat('frekvecna = ', str(f1), ', faza = ', str(faza1), ' \\pi'))
-    plt.axis('tight')
-    # plt.autoscale(False)
-    plt.subplot(2, 1, 2)
+    plt.title('frekvenca = {0}, faza = {1} $\pi$'.format(f1, round(faza1, 2)))
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
 
-    plt.autoscale(False)
-    plt.plot(smop.cat(0, 0).tolist(), smop.cat(0, Xs1).tolist(), lineWidth=2)
+    plt.subplot(2, 1, 2)
+    plt.plot([0, 0], [0, Xs1], lineWidth=2)  # narišemo amplitude kosinusov
     plt.xlabel('realna os')
     plt.ylabel('imaginarna os')
-    # plt.axis(-300, 300, -300, 300)
-
     plt.xlim(-300, 300)
     plt.ylim(-300, 300)
-    # setattr(plt.gca(),'YLim',smop.cat(- 300,300))
-    # setattr(plt.gca(),'XLim',smop.cat(- 300,300))
-    plt.title(smop.cat('frekvecna sin = ', str(f2), ', faza2 = ', str(faza2), ' \\pi'))
+    plt.gca().set_aspect('equal', adjustable='box')
+    plt.title('frekvenca sin = {0}, faza2 = {1} $\pi$'.format(f2, faza2))
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     plt.pause(0.5)
 
-'-------------------------------------------------------------\n% skalarni produkt dveh sinusoid z ENAKIMA FREKVENCAMA IN RAZLIcNIMA FAZAMA\n% analiza s sinusoidami in kosinusoidami\n'
+# ukazi.m:95 -- Note: Preverjeno z Matlab
+# -------------------------------------------------------------
+# skalarni produkt dveh sinusoid z ENAKIMA FREKVENCAMA IN RAZLIČNIMA FAZAMA
+# analiza s sinusoidami in kosinusoidami
+
+# ukazi.m:98
 plt.close('all')
 Fvz = 512
-# ukazi3.m:90
 T = 1
-# ukazi3.m:91
-i = smop.cat(arange(0.0, T * Fvz)) / Fvz
-# ukazi3.m:92
-
+i = np.arange(T * Fvz) / Fvz  # vektor časovnih indeksov
 f1 = 5
-# ukazi3.m:93
 A1 = 1
-# ukazi3.m:93
 f2 = 5
-# ukazi3.m:94
 faza2 = 0
-# ukazi3.m:94
+
 plt.figure()
-for faza1 in arange(- 1, 1.05, 0.05).reshape(-1):
+for faza1 in np.arange(- 1, 1.05, 0.05):
     plt.clf()
     # ustvarimo signal
-    x = dot(A1, sin(dot(2 * pi * f1, i) + faza1 * pi))
-    # ukazi3.m:99
-    s1 = dot(1, sin(dot(2 * pi * f2, i) + faza2 * pi))
-    # ukazi3.m:101
-    c1 = dot(1, cos(dot(2 * pi * f2, i) + faza2 * pi))
-    # ukazi3.m:103
-    Xs1 = dot(s1, x.T)
-    # ukazi3.m:105
-    Xc1 = dot(c1, x.T)
-    # ukazi3.m:106
-    plt.subplot(2, 1, 1)
-    plt.plot(i.tolist(), x.T.tolist())
+    x = A1 * np.sin(2 * np.pi * f1 * i + faza1 * np.pi)
+    # ustvarimo sinusoido
+    s1 = 1 * np.sin(2 * np.pi * f2 * i + faza2 * np.pi)
+    # ustvarimo kosinusoido
+    c1 = 1 * np.cos(2 * np.pi * f2 * i + faza2 * np.pi)
 
-    s1 = s1.squeeze()
-    plt.plot(i.tolist(), s1.tolist(), 'r')
-    # hold('off')
-    plt.xlabel('cas (s)')
+    Xs1 = np.dot(s1, x)  # skalarni produkt s sinusoido
+    Xc1 = np.dot(c1, x)  # skalarni produkt s kosinusoido
+
+    plt.subplot(2, 1, 1)
+    plt.plot(i, x)      # narišemo prvo
+    plt.plot(i, s1, 'r')  # in pe drugo sinusoido
+    plt.xlabel('čas (s)')
     plt.ylabel('Amplituda')
-    plt.title(smop.cat('frekvecna = ', str(f1), ', faza = ', str(faza1), ' \\pi'))
-    plt.axis('tight')
+    plt.title('frekvenca = {0}, faza = {1} $\pi$'.format(f1, round(faza1, 2)))
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+
     plt.subplot(2, 1, 2)
-    x = x.squeeze()
-    X = fft.fft(x)
-    # ukazi3.m:116
-    plt.autoscale(False)
-    plt.plot(smop.cat(0, Xc1).tolist(), smop.cat(0, Xs1).tolist(), lineWidth=2)
+    X = np.fft.fft(x)  # FFT!!
+    plt.plot([0, Xc1], [0, Xs1], lineWidth=2)  # narišemo amplitudo kosinusov
     plt.xlabel('x os')
     plt.ylabel('y os')
-    # plt.axis('equal')
     plt.ylim(-300, 300)
     plt.xlim(-300, 300)
-    plt.title(smop.cat('frekvecna sin in cos = ', str(f2), ', faza2 = ', str(faza2), ' \\pi'))
+    plt.gca().set_aspect('equal', adjustable='box')
+    plt.title('frekvenca sin in cos = {0}, faza2 = {1} $\pi$'.format(f2, faza2))
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     plt.pause(0.5)
 
-'-------------------------------------------------------------\n% skalarni produkt dveh sinusoid z ENAKIMA FREKVENCAMA IN RAZLIcNIMA FAZAMA\n% komplesna analiza s fft.fft\n'
-Fvz = 512
-# ukazi3.m:128
-T = 1
-# ukazi3.m:129
-i = smop.cat(arange(0.0, T * Fvz)) / Fvz
-# ukazi3.m:130
+# ukazi.m:136 -- Note: Preverjeno z Matlab
+# -------------------------------------------------------------
+# skalarni produkt dveh sinusoid z ENAKIMA FREKVENCAMA IN RAZLIČNIMA FAZAMA
+# komplesna analiza s fft
 
+# ukazi.m:1391
+Fvz = 512
+T = 1
+i = np.arange(T * Fvz) / Fvz  # vektor časovnih indeksov
 f1 = 5
-# ukazi3.m:131
 A1 = 1
-# ukazi3.m:131
 faza1 = 0.5
-# ukazi3.m:131
+
 plt.figure()
-for faza1 in arange(-1, 1.05, 0.05).reshape(-1):
+for faza1 in np.arange(-1, 1.05, 0.05):
     plt.clf()
     # ustvarimo sinusiudo
-    x = A1 * sin(dot(2 * pi * f1, i) + faza1 * pi)
-    # ukazi3.m:136
+    x = A1 * np.sin(2 * np.pi * f1 * i + faza1 * np.pi)
+
     plt.subplot(2, 1, 1)
-    plt.plot(i.tolist(), x.T.tolist())  # narisemo prvo
-
-    plt.plot(i.tolist(), s1.tolist(), 'r')  # in se drugo sinusoido
-    # hold('off')
-    plt.xlabel('cas (s)')
+    plt.plot(i, x)      # narišemo prvo
+    plt.plot(i, s1, 'r')  # in se drugo sinusoido
+    plt.xlabel('čas (s)')
     plt.ylabel('Amplituda')
-    plt.title(smop.cat('faza = ', str(faza1), ' \\pi'))
-    plt.axis('tight')
+    plt.title('faza = {0} $\pi$'.format(round(faza1, 2)))
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+
     plt.subplot(2, 1, 2)
-    X = fft.fft(x)
-
-    # ukazi3.m:146
-
-    plt.autoscale(False)
-    plt.plot(smop.cat(0, real(X.T[f1])).tolist(), smop.cat(0, imag(X.T[f1])).tolist(), lineWidth=2)
+    X = np.fft.fft(x)  # FFT!!
+    plt.plot([0, np.real(X[f1])], [0, np.imag(X[f1])], lineWidth=2)  # narišemo amplitude kosinusov
     plt.xlabel('realna os')
     plt.ylabel('imaginarna os')
-    # plt.axis('equal')
     plt.ylim(-300, 300)
     plt.xlim(-300, 300)
+    plt.gca().set_aspect('equal', adjustable='box')
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     plt.pause(0.5)
 
-######################################################
-# skalarni produkt dveh sinusoid z ENAKIMA FREKVENCAMA IN RAZLIcNIMA FAZAMA
+# ukazi.m:167 -- Note: Preverjeno z Matlab vendar deluje počasi
+# #####################################################
+# skalarni produkt dveh sinusoid z ENAKIMA FREKVENCAMA IN RAZLIČNIMA FAZAMA
 # komplesna analiza s fft - pogled z druge perspektive (realni in imaginarni del fft-ja)
 
+# ukazi.m:171
 Fvz = 512
-# ukazi3.m:160
 T = 1
-# ukazi3.m:161
-i = smop.cat(arange(0.0, T * Fvz)) / Fvz
-# ukazi3.m:162
-
+i = np.arange(T * Fvz) / Fvz  # vektor časovnih indeksov
 f1 = 5
-# ukazi3.m:163
 A1 = 5
-# ukazi3.m:163
 faza1 = 0.5
-# ukazi3.m:163
+
 plt.figure()
-for faza1 in arange(- 1, 1, 0.05).reshape(-1):
+for faza1 in np.arange(- 1, 1.05, 0.05):
+    plt.clf()
+
     # ustvarimo sinusiudo
-    x = dot(A1, sin(dot(2 * pi * f1, i) + faza1 * pi))
-    # ukazi3.m:168
-    X = fft.fft(x)
-    # ukazi3.m:170
+    x = A1 * np.sin(2 * np.pi * f1 * i + faza1 * np.pi)
+    X = np.fft.fft(x)  # FFT!!
+
     plt.subplot(2, 1, 1)
-    plt.stem(dot(i / T, Fvz).tolist(), real(X.T).tolist())
+    plt.stem(Fvz * i / T, np.real(X))  # narišemo amplitude kosinusov
     plt.xlabel('Frekvenca (Hz)')
     plt.ylabel('Amplituda')
-    plt.title(smop.cat('realni del fft.fft; faza = ', str(faza1), ' \\pi'))
-    plt.axis('tight')
-    # setattr(plt.gca(),'YLim',smop.cat(- 1500,1500))
-    plt.autoscale(False)
+    plt.title('realni del fft; faza = {0} $\pi$'.format(round(faza1, 2)))
     plt.ylim(-1500, 1500)
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+
     plt.subplot(2, 1, 2)
-    plt.stem(dot(i / T, Fvz).tolist(), imag(X.T).tolist())
+    plt.stem(Fvz * i / T, np.imag(X))  # narišemo amplitude sinusov
     plt.xlabel('Frekvenca (Hz)')
     plt.ylabel('Amplituda')
-    plt.title('imaginarni del fft.fft')
-    plt.axis('tight')
-    plt.axis('tight')
-    # setattr(plt.gca(),'YLim',smop.cat(- 1500,1500))
-    plt.autoscale(False)
+    plt.title('imaginarni del fft')
     plt.ylim(-1500, 1500)
+    plt.tight_layout(rect=[0, 0.03, 1, 0.95])
     plt.pause(0.05)
 
-'-------------------------------------------------------------\n% superpozicija sinusoid, cosinusiode in sinusoide\n'
-Fvz = 512
-# ukazi3.m:187
-T = 1
-# ukazi3.m:188
-i = smop.cat(arange(0.0, T * Fvz)) / Fvz
-# ukazi3.m:189
+# ukazi.m:197 -- Note: Preverjeno z Matlab
+# -------------------------------------------------------------
+# superpozicija sinusoid, cosinusiode in sinusoide
 
+# ukazi.m:200
+Fvz = 512
+T = 1
+i = np.arange(T * Fvz) / Fvz  # vektor časovnih indeksov
 f1 = 5
-# ukazi3.m:190
 A1 = 5
-# ukazi3.m:190
 faza1 = 0.5
-# ukazi3.m:190
 f2 = 32
-# ukazi3.m:191
 A2 = 3
-# ukazi3.m:191
 faza2 = 0.3
-# ukazi3.m:191
+
 # ustvarimo superpozicijo sinusoid
-x = dot(A1, sin(dot(2 * pi * f1, i) + faza1 * pi)) + dot(A2, sin(dot(2 * pi * f2, i) + faza2 * pi))
-# ukazi3.m:193
+x = A1 * np.sin(2 * np.pi * f1 * i + faza1 * np.pi) + A2 * np.sin(2 * np.pi * f2 * i + faza2 * np.pi)
 plt.figure()
-plt.plot(i.tolist(), x.T.tolist())
+plt.plot(i, x)  # narišemo signal
 
 plt.xlabel('cas (s)')
 plt.ylabel('Amplituda')
-plt.axis('tight')
-X = fft.fft(x)
-# ukazi3.m:201
+X = np.fft.fft(x)
 
 plt.figure()
 plt.subplot(2, 1, 1)
-plt.stem(dot(i / T, Fvz).tolist(), real(X.T).tolist())
-
+plt.stem(Fvz * i / T, np.real(X))
 plt.xlabel('Frekvenca (Hz)')
 plt.ylabel('Amplituda')
-plt.title('realni del fft.fft')
-plt.axis('tight')
-plt.subplot(2, 1, 2)
-plt.stem(dot(i / T, Fvz).tolist(), - imag(X.T).tolist())
+plt.title('realni del fft')
+plt.tight_layout(rect=[0, 0.03, 1, 0.95])
 
+plt.subplot(2, 1, 2)
+plt.stem(Fvz * i / T, np.imag(X))
 plt.xlabel('Frekvenca (Hz)')
 plt.ylabel('Amplituda')
 plt.title('imaginarni del fft')
-plt.axis('tight')
-plt.axis('tight')
-################################################################
+plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+
+# ukazi.m:225 -- Note: Preverjeno z Matlab
+# ###############################################################
+
 plt.close('all')
 plt.figure()
-M = abs(X)
-# ukazi3.m:215
-# X=X.squeeze()
-P = arctan2(imag(X), real(X))
-# P=[None]*len(X.tolist()) # Init list of specified size
-# for index in arange(0,len(X)-1,1):
-#   P[index] = math.atan2(imag(X[index]),real(X[index]))
-
-# ukazi3.m:216
-
-M = M.squeeze()
-plt.stem(dot(i / T, Fvz).tolist(), M)
-
+M = abs(X)  # dobimo amplitude
+P = np.arctan2(np.imag(X), np.real(X))  # dobimo faze
+plt.stem(Fvz * i / T, M)
 plt.xlabel('Frekvenca')
 plt.ylabel('Amplituda')
 plt.title('Amplituda fft-ja')
-plt.axis('tight')
+
 # niso vse faze zanimive...
 plt.figure()
 plt.plot(P)
-
 plt.title('Faza fft-ja')
-plt.axis('tight')
+
 # le faze tistih sinusoid, ki so dejansko prisotne v signalu
 plt.figure()
-P1 = multiply(P, (M > 0.1))
-# ukazi3.m:230
-
+P1 = np.multiply(P, (M > 0.1))
 P1 = P1.squeeze()
-plt.stem(dot(i / T, Fvz).tolist(), P1)
-
+plt.stem(Fvz * i / T, P1)
 plt.xlabel('Frekvenca')
 plt.ylabel('Faza')
 plt.title('Faza fft-ja')
-plt.axis('tight')
-'% POJASNILO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
-# atan2(imag(X),real(X)) vrne faze za enacbo M*sin(x-pi/2+theta), torej moramo ocenjeni fazi pristeti se pi/2;
+
+# POJASNILO %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# atan2(imag(X),real(X)) vrne faze za enacbo M*sin(x-pi/2+theta), torej moramo ocenjeni fazi prišteti še pi/2;
 #      P = P + pi/2;
-# Ne pozabimo tudi, da smo pri generiranju signala x spremenjivko faza2 pomnozili s pi, torej je faza izrazena v enotah pi
-'% KONEC POJASNILA %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%'
-'-----------------------------------------------------------------------------------------------'
+# Ne pozabimo tudi, da smo pri generiranju signala x spremenjivko faza2 pomnožili s pi, torej je faza izražena v enotah pi
+# KONEC POJASNILA %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# -----------------------------------------------------------------------------------------------
 ################################################################################################
 
 #             L A S T N O S T I   D F T
 
 ################################################################################################
-'-----------------------------------------------------------------------------------------------'
+# -----------------------------------------------------------------------------------------------
+
+# ukazi.m:261 -- Note: Imaginarni deli so 0
 # linearnost DFT-ja
-x = random.randn(128, 1)
-# ukazi3.m:250
-
-X = fft.fft(x)
-# ukazi3.m:251
-
-y = random.randn(128, 1)
-# ukazi3.m:252
-
-Y = fft.fft(y)
-# ukazi3.m:253
-
-a = random.rand(1)
-# ukazi3.m:255
-
-b = random.rand(1)
-# ukazi3.m:256
-z = dot(x, a) + dot(y, b)
-# ukazi3.m:258
-
-Z = fft.fft(z)
-# ukazi3.m:259
+x = np.random.randn(128, 1)
+X = np.fft.fft(x)
+y = np.random.randn(128, 1)
+Y = np.fft.fft(y)
+a = np.random.rand(1)
+b = np.random.rand(1)
+z = a * x + b * y
+Z = np.fft.fft(z)
 
 # graficni preizkus linearnosti DFT-ja
 plt.figure()
 plt.subplot(2, 1, 1)
-
-plt.plot(real(Z), lineWidth=2)
-plt.plot(real(dot(X, a) + dot(Y, b)), 'r', lineWidth=1)
+plt.plot(np.real(Z), lineWidth=2)
+plt.plot(np.real(a * X + b * Y), 'r', lineWidth=1)
 plt.xlabel('frekvenca')
 plt.ylabel('realni del')
 plt.title('fft.fft(a*x + b*y) in a*fft.fft(x) + b*fft.fft(y): primerjava realnih delov')
-plt.axis('tight')
-plt.subplot(2, 1, 2)
+plt.tight_layout(rect=[0, 0.03, 1, 0.95])
 
-plt.plot(imag(Z), lineWidth=2)
-plt.plot(imag(dot(X, a) + dot(Y, b)), 'r', lineWidth=1)
+plt.subplot(2, 1, 2)
+plt.plot(np.imag(Z), lineWidth=2)
+plt.plot(np.imag(a * X + b * Y), 'r', lineWidth=1)
 plt.ylabel('imaginarni del')
 plt.xlabel('frekvenca')
 plt.title('fft.fft(a*x + b*y) in a*fft.fft(x) + b*fft.fft(y): primerjava imaginarnih delov')
-plt.axis('tight')
-'-----------------------------------------------------------------------------------------------'
+plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+
+# ukazi.m:290 -- Note: Energija v frekvenčni domeni ni pravilna.
+# -----------------------------------------------------------------------------------------------
 # Parsevalov teorem
-x = random.randn(128, 1)
-# ukazi3.m:280
+x = np.random.randn(128, 1)  # ustvarim signal
+X = np.fft.fft(x)  # in njegovo frekvenčno transformiranko
+energija_v_t_domeni = np.dot(x.T, x).item()
+energija_v_f_domeni = np.mean(abs(X) ** 2)
 
-X = fft.fft(x)
-# ukazi3.m:281
-
-energija_v_t_domeni = dot(x.T, x)
-# ukazi3.m:282
-energija_v_f_domeni = mean(abs(X) ** 2)
-# ukazi3.m:283
-'-----------------------------------------------------------------------------------------------'
+# ukazi.m: -- Note: Preverjeno z Matlab
+# -----------------------------------------------------------------------------------------------'
 # fft in konvoluciija
 
-smop.clc()
+# ukazi.m:300
+print("\n" * 80)  # clc
+# exit()  # za izbris spremenljivk, ponovno je potrebno importati knjižnice
 
-Fs = 44100
-# ukazi3.m:290
-
-bits = 16
-# ukazi3.m:291
-
+Fs = 44100  # vzorčevalna frekvenca
+bits = 16   # bitna ločljivost - ni uporabljena
 T1 = 3
-# ukazi3.m:292
-T2 = 2
-# ukazi3.m:292
+T2 = 2      # dolžina signalov
 
-# my_recorder=audiorecorder(Fs,bits,1)
-# ukazi3.m:294
-disp(smop.cat('Snemam prvi posnetek v dolzini ', str(T1), 's...'))
-# recordblocking(my_recorder,T1)
-# posnetek1=getaudiodata(my_recorder)
+print('Snemam prvi posnetek v dolzini {0}s...'.format(T1))
 posnetek1 = sd.rec(T1 * Fs, Fs, 1, blocking=True)
-# ukazi3.m:298
-disp(smop.cat('Snemam drugi posnetek v dolzini ', str(T2), 's...'))
-# recordblocking(my_recorder,T2)
-# posnetek2=getaudiodata(my_recorder)
+
+print('Snemam prvi posnetek v dolzini {0}s...'.format(T2))
 posnetek2 = sd.rec(T2 * Fs, Fs, 1, blocking=True)
-# ukazi3.m:302
-disp('predvajam prvi posnetek')
-# my_player=audioplayer(posnetek1,Fs)
-myplayer = sd.play(posnetek1, Fs, blocking=True)
-# ukazi3.m:305
-# playblocking(my_player)
-disp('predvajam drugi posnetek')
-my_player = sd.play(posnetek2, Fs, blocking=True)
-# ukazi3.m:309
-# playblocking(my_player)
-smop.clc()
-disp('konvolucija posnetkov v casovnem prostoru')
-efekt1 = smop.matlabarray([])
-# ukazi3.m:314
-tic = time.time()
-efekt1[:, 1] = convolve(posnetek1[:, 1], posnetek2[:, 1])
-# ukazi3.m:316
-toc = time.time()
-t = copy(toc)
-# ukazi3.m:317
-efekt1 = dot(efekt1 / max(efekt1), max(posnetek1))
-# ukazi3.m:318
 
-disp(smop.cat('Potrebovali smo "samo" ', str(round(dot(t, 100)) / 100), ' s'))
-disp(smop.cat('... in rezultat se slisi takole:'))
-my_player = sd.play(efekt1, Fs, blocking=True)
-# ukazi3.m:322
-# playblocking(my_player)
-disp('konvolucija posnetkov v frekvencnem prostoru')
-efekt2 = smop.matlabarray([])
-# ukazi3.m:327
-tic = time.time()
-X = fft.fft(smop.cat([posnetek1[:, 1]], [zeros(len(posnetek2[:, 1]) - 1, 1)]))
-# ukazi3.m:329
-Y = fft.fft(smop.cat([posnetek2[:, 1]], [zeros(len(posnetek1[:, 1]) - 1, 1)]))
-# ukazi3.m:330
-efekt2[:, 1] = fft.ifft.fft(multiply(X, Y))
-# ukazi3.m:331
-toc = time.time()
-t = copy(toc)
-# ukazi3.m:332
-efekt2 = dot(efekt2 / max(efekt2), max(posnetek1))
-# ukazi3.m:333
+print('Predvajam prvi posnetek.')
+sd.play(posnetek1, Fs, blocking=True)
 
-disp(smop.cat('Potrebovali smo ', str(round(dot(t, 100)) / 100), ' s'))
-disp(smop.cat('... in rezultat se slisi takole:'))
-my_player = sd.play(efekt2, Fs, blocking=True)
-# ukazi3.m:337
-# playblocking(my_player)
-'-----------------------------------------------------------------------------------------------'
+print('Predvajam drugi posnetek.')
+sd.play(posnetek2, Fs, blocking=True)
+
+# ukazi.m:324
+print("\n" * 80)  # clc
+print('Konvolucija posnetkov v časovnem prostoru.')
+efekt1 = np.empty([len(posnetek1) + len(posnetek2) - 1, 1])
+tic = time.time()
+efekt1[:, 0] = np.convolve(posnetek1[:, 0], posnetek2[:, 0])
+
+toc = time.time() - tic
+efekt1 = np.dot(efekt1 / max(efekt1), max(posnetek1))
+
+print('Potrebovali smo "samo" {0} s'.format(round(toc * 100) / 100))
+print('... in rezultat se sliši takole:')
+sd.play(efekt1, Fs, blocking=True)
+
+# ukazi.m:338
+print('konvolucija posnetkov v frekvenčnem prostoru')
+efekt2 = np.empty([len(posnetek1) + len(posnetek2) - 1, 1])
+tic = time.time()
+X = np.fft.fft(np.concatenate((posnetek1[:, 0], np.zeros(len(posnetek2[:, 0]) - 1))))
+Y = np.fft.fft(np.concatenate((posnetek2[:, 0], np.zeros(len(posnetek1[:, 0]) - 1))))
+efekt2[:, 0] = np.fft.ifft(np.multiply(X, Y))
+toc = time.time()
+efekt2 = np.dot(efekt2 / max(efekt2), max(posnetek1))
+
+print('Potrebovali smo {0} s'.format(round(toc * 100) / 100))
+print('... in rezultat se sliši takole:')
+sd.play(efekt2, Fs, blocking=True)
+
+# ukazi.m:352 -- Note: Odziv ne zgleda ustrezen.
+# -----------------------------------------------------------------------------------------------'
 # fft vsebina zvocnega posnetka
 
-smop.clc()
+# ukazi.m:355
+print("\n" * 80)  # clc
+# exit()  # za izbris spremenljivk, ponovno je potrebno importati knjižnice
 
 Fs = 44100
-# ukazi3.m:346
-
 bits = 16
-# ukazi3.m:347
-
 T1 = 5
-# ukazi3.m:348
-# my_recorder=audiorecorder(Fs,bits,1)
-# ukazi3.m:350
-disp(smop.cat('Snemam prvi posnetek v dolzini ', str(T1), 's...'))
-# recordblocking(my_recorder,T1)
-posnetek = sd.rec(T1 * Fs, Fs, 1)
-# ukazi3.m:354
+
+print('Snemam prvi posnetek v dolzini {0} s...'.format(T1))
+
+posnetek = sd.rec(T1 * Fs, Fs, 1, blocking=True)
+
 plt.figure()
-plt.plot(posnetek)
-X = (fft.fft(posnetek))
-# ukazi3.m:359
+plt.plot(posnetek, lineWidth=0.4)
+X = np.fft.fft(posnetek)
 
-N = size(posnetek, 1)
-# ukazi3.m:361
+N = len(posnetek)
 dF = Fs / N
-# ukazi3.m:362
 
-f = smop.matlabarray(smop.cat(arange(dF, Fs / 2, dF), arange(Fs / 2 - dF, 0, - dF)))
+f = np.concatenate((np.arange(dF, Fs / 2 + dF, dF), np.arange(Fs / 2 - dF, -dF, -dF)))
 # ukazi3.m:363
 plt.figure()
-plt.plot(f, abs(X) / N)
+plt.plot(f, abs(X) / N, lineWidth=0.4)
 plt.xlabel('Frekvenca (H)')
 plt.title('Odziv magnitude')
+
+#tmp = np.arange(dF, Fs / 2 + 0.2, 0.2)0
+#tmp2 = np.arange(Fs / 2 - dF, -0.2, -0.2)
