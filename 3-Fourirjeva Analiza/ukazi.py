@@ -4,16 +4,10 @@
 
 # 3-Fourirjeva Analiza
 import numpy as np
-from scipy.signal import convolve2d as conv2
-from scipy.signal.windows import gaussian as gausswin
-import pylab as pylab
 import matplotlib.pyplot as plt
-from pathlib import Path
-from PIL import Image
 
 # Potrebni za del z zvokom
 import sounddevice as sd
-from scipy.io import wavfile
 import time
 
 # ukazi.m:1
