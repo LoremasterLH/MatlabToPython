@@ -15,24 +15,29 @@ Prevod prve polovice vaj pri predmetu ROSIS iz Matlab v Python 3.
 	<li>pytftb (from https://github.com/scikit-signal/pytftb)</li>
 </ul>
 
-1-Vzorčenje				Prevedeno
-2-Linearni Sistemi in Konvolucija	Prevedeno
-3-Fourirjeva Analiza			Prevedeno
-4-Lastnosti Fourirjeve Analize		Delno prevedeno
-5-Filtri				Work in progress
+<p>1-Vzorčenje				Prevedeno</p>
+<p>2-Linearni Sistemi in Konvolucija	Prevedeno</p>
+<p>3-Fourirjeva Analiza			Prevedeno</p>
+<p>4-Lastnosti Fourirjeve Analize	Delno prevedeno</p>
+<p>5-Filtri				Work in progress</p>
 
 ----------------------------------------------------------------------------------------------------
 
-Easy setup (Not thoroughly tested as I don't use Anaconda. Should be an easier setup than starting from scratch, though. Might be inconsistent; feel free to change/add):
-Install Anaconda
-	If you want to use VS Code, install it once prompted (recommended if you're unfamiliar with Python, but hey, you can use Notepad, if you want)
-Install Finished
-Open Anaconda Navigator (https://docs.anaconda.com/anaconda/user-guide/getting-started)
-Select VS Code
-File -> Open File -> Whatever file you want
-If you see horrible curly lines below imports do not fret! While Anaconda includes many packages, it does not include everything we need. Installing packages is easy however.
+<p>Easy setup (Not thoroughly tested as I don't use Anaconda. Should be an easier setup than starting from scratch, though. Might be inconsistent; feel free to change/add):</p>
+
+<h2>Install Anaconda</h2>
+
+<p>If you want to use VS Code, install it once prompted (recommended if you're unfamiliar with Python, but hey, you can use Notepad, if you want)/p>
+	
+<h2>Install Finished</h2>
+
+Open Anaconda Navigator (https://docs.anaconda.com/anaconda/user-guide/getting-started)</br>
+Select VS Code</br>
+File -> Open File -> Whatever file you want</br>
+	
+If you see horrible curly lines below imports do not fret! While Anaconda includes many packages, it does not include everything we need. Installing packages is easy however.</br>
 To install packages that were not found:
-Open "Anaconda Prompt"
+Open "Anaconda Prompt"<br/>
 	pip install <package>
 
 In case you're wondering why sometimes pip and sometimes conda for installing: pip is Python's package manager while conda is package manager of Anaconda distribution.
@@ -67,6 +72,8 @@ For each grayed out "import" and "from" click on it
 Not all needed packages are included in Anaconda. To install missing packages (ones which have import/for statements in grey) go to:
 File->Settings (Ctrl+Alt+S) click on + on the right side (Ctrl+Insert)
 Potentially needed imports for 1st assignment:
-	pip (to update to recent)
-	plotly
-	Pillow (not PIL)
+<ul>
+	<li>pip (to update to recent)</li>
+	<li>plotly</li>
+	<li>Pillow (not PIL)</li>
+</ul>
