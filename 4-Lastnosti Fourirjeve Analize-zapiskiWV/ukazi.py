@@ -9,6 +9,8 @@ from scipy.signal import convolve2d as conv2
 from scipy.signal.windows import gaussian as gausswin
 from scipy.signal import hilbert
 from tftb.generators import fmlin
+from tftb.processing import Spectrogram
+from tftb.processing.reassigned import pseudo_wigner_ville
 import pylab as pylab
 import matplotlib.pyplot as plt
 from pathlib import Path
@@ -19,63 +21,63 @@ import sounddevice as sd
 from scipy.io import wavfile
 import time
 
+# ukazi.m:1
 # --------------------------------------------------------------------------------------
 # Časovno-frekvenčna ločljivost in časovno-frekvenčne porazdelitve
 #######################################################################
-#os.chdir('D:/Dropbox/FERI/mag/ROSIS/4-Lastnosti Fourirjeve Analize-zapiskiWV/tftb/tftb-0.2/tftb-0.2/mfiles')
 
+# ukazi.m:6 -- Note: Preverjeno z Matlab
 Fs = 1024
-# ukazi4.m:6
-sig = hilbert(np.array(fmlin(1*Fs)).real)
-# ukazi4.m:7
+sig = fmlin(1*Fs)[0]    # Ker v pythonu fmlin vrne analitičen signal, ni potrebno napraviti Hilbertove transformacije.
 
+# Narišemo realni del v časovni domeni (signal je kompleksen, a le zaradi umetno zagotovljene analitičnosti.
 plt.figure()
-plt.plot(np.real(sig))
-
+plt.plot(np.real(sig), LineWidth=0.4)
 plt.xlabel('t')
 plt.ylabel('amplituda')
-plt.figure()
-plt.plot(abs(np.fft.fft(sig)))
 
+# Analitični signali nimajo simetrije preko Nyquistove frekvence.
+plt.figure()
+plt.plot(abs(np.fft.fft(sig)), LineWidth=0.4)
 plt.xlabel('f')
 plt.ylabel('amplituda')
-plt.axis('tight')
 
+# ukazi.m:16
 #######################################################################
-# asovno-frekvenna loljivost prvi: vija asovna loljivost, nija frekvenna loljivost
+# Časovno-frekvenčna ločljivost prvič: višja časovna ločljivost, nižja frekvenčna ločljivost
+
+# ukazi.m:18 -- Note: Graf je prikazan s knjižnico pytftb in se razlikuje od Matlabovega.
 plt.close('all')
 T=32
-# ukazi4.m:19
 N=256
-# ukazi4.m:20
 dT=T - 1
-# ukazi4.m:21
-TFD,f,t=specgram(sig,N,Fs,window(rectwin,T),dT,nargout=3)
-# ukazi4.m:22
-plt.figure()
-contour(t,f,abs(TFD))
-plt.axis('tight')
-plt.xlabel('t (s)','FontSize',12)
-plt.ylabel('f (Hz)','FontSize',12)
-plt.axis('tight')
-plt.title(cat('T=',str(T),',N=',str(N),',dT=',str(dT)))
-# asovno-frekvenna loljivost drugi: nija asovna loljivost, vija frekvenna loljivost
+window = np.ones(T)
+TFD = Spectrogram(sig, n_fbins=N, fwindow=window)
+TFD.run()
+TFD.plot(kind="contour", threshold=0.1, show_tf=False)
+
+# plt.xlabel('t (s)','FontSize',12)
+# plt.ylabel('f (Hz)','FontSize',12)
+# plt.title('T={0},N={1},dt={2}'.format(T, N, dT))
+
+# ukazi.m:29 -- Note: Isto kot prej.
+# Časovno-frekvenčna ločljivost drugič: nižja časovna ločljivost, višja frekvenčna ločljivost
 T=256
-# ukazi4.m:30
 N=256
-# ukazi4.m:31
 dT=T - 1
-# ukazi4.m:32
-TFD,f,t=specgram(sig,N,Fs,window(rectwin,T),dT,nargout=3)
-# ukazi4.m:33
-plt.figure()
-contour(t,f,abs(TFD))
-plt.axis('tight')
-plt.xlabel('t (s)','FontSize',12)
-plt.ylabel('f (Hz)','FontSize',12)
-plt.axis('tight')
-plt.title(cat('T=',str(T),',N=',str(N),',dT=',str(dT)))
-# Wigner-Villova asovno-frekvenna porazdelitev - skoraj idealna asovna in frekvenna loljivost
+window = np.ones(T)
+TFD = Spectrogram(sig, n_fbins=N, fwindow=window)
+TFD.run()
+TFD.plot(kind="contour", threshold=0.1, show_tf=False)
+
+# plt.xlabel('t (s)','FontSize',12)
+# plt.ylabel('f (Hz)','FontSize',12)
+# plt.title(cat('T=',str(T),',N=',str(N),',dT=',str(dT)))
+
+# ukazi.m:49 -- Note:
+# Wigner-Villova časovno-frekvenčna porazdelitev - skoraj idealna časovna in frekvenčna ločljivost
+tfr, rtfr, hat = pseudo_wigner_ville(np.real(sig))
+
 TFD,t,f=tfrwv(sig,nargout=3)
 # ukazi4.m:41
 plt.figure()
@@ -86,7 +88,8 @@ plt.ylabel('f','FontSize',12)
 plt.axis('tight')
 plt.axis('xy')
 plt.title(cat('Wigner-Villova asovno-frekvenna porazdelitev'))
-# Trenutna autokorelacija  Rss(t,tau) = sig(t+tau) .* conj(sig(t-tau)); -  kdavdratna funkcija signala---------------------
+
+# Trenutna autokorelacija  Rss(t,tau) = sig(t+tau) .* conj(sig(t-tau)); -  kvadratna funkcija signala---------------------
 #   je osnova za Wigner-Villovo asovnofrekvenno porazdelitev in omogoa skoraj idealno asovno in frekvenno loljivost
 t=np.arange(1,size(sig))
 # ukazi4.m:51
