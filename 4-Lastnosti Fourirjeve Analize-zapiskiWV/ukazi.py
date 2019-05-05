@@ -11,6 +11,7 @@ from scipy.signal import hilbert
 from tftb.generators import fmlin
 from tftb.processing import Spectrogram
 from tftb.processing.reassigned import pseudo_wigner_ville
+from tftb.processing import WignerVilleDistribution
 import pylab as pylab
 import matplotlib.pyplot as plt
 from pathlib import Path
@@ -76,6 +77,11 @@ TFD.plot(kind="contour", threshold=0.1, show_tf=False)
 
 # ukazi.m:49 -- Note:
 # Wigner-Villova časovno-frekvenčna porazdelitev - skoraj idealna časovna in frekvenčna ločljivost
+
+wvd = WignerVilleDistribution(np.real(sig))
+wvd.run()
+wvd.plot(kind='contour')
+
 tfr, rtfr, hat = pseudo_wigner_ville(np.real(sig))
 
 TFD,t,f=tfrwv(sig,nargout=3)
