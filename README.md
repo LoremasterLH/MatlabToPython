@@ -23,24 +23,24 @@ Prevod prve polovice vaj pri predmetu ROSIS iz Matlab v Python 3.
 
 ----------------------------------------------------------------------------------------------------
 
-<h2>Manual Install</h2>
+<h1>Manual Install</h1>
 <ul>
 	<li>Download and install latest version of Python 3.x</li>
 	<li>Install PyCharm Community Edition</li>
 	<li>Clone GitHub repository</li>
 	<li>Open/Create a project in the root of the GitHub repository</li>
 	<li>Go to File -> Settings -> Project: <name> -> Project interpreter</li>
-		<li>Make sure Python 3.x is set as the project interpreter.</li>
-		<li>Click on the plus on the right of the window and install all above mentioned packages (or any that are in imports of the files).</li>
+	<li>Make sure Python 3.x is set as the project interpreter.</li>
+	<li>Click on the plus on the right of the window and install all above mentioned packages (or any that are in imports of the files).</li>
 	<li>Make sure to always execute (alt+shift+E) imports commands at the top before attempting to execute code.</li>
 </ul>
 
-<h2>Easy setup</h2>
+<h1>Easy setup</h1>
 Not thoroughly tested as I don't use Anaconda. Should be an easier setup than starting from scratch, though:
 
 <h2>Install Anaconda</h2>
 
-<p>If you want to use VS Code, install it once prompted (recommended if you're unfamiliar with Python, but hey, you can use Notepad, if you want)/p>
+<p>If you want to use VS Code, install it once prompted (recommended if you're unfamiliar with Python, but hey, you can use Notepad, if you want)</p>
 	
 <h2>Install Finished</h2>
 
