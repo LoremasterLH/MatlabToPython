@@ -10,7 +10,6 @@ Prevod prve polovice vaj pri predmetu ROSIS iz Matlab v Python 3.
 	<li>Pillow (not PIL, as that is older unsupported version, Pillow is reffered to as PIL for the sake of imports)</li>
 	<li>scipy</li>
 	<li>sounddevice</li>
-	<li>time</li>
 	<li>pytftb (from https://github.com/scikit-signal/pytftb)</li>
 </ul>
 
